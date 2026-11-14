@@ -8,6 +8,8 @@ import Toast from 'vue-toastification';
 import 'vue-toastification/dist/index.css'; // Đảm bảo import CSS của toast
 import './assets/theme.css'; // token WorkHub (đặt sau CSS toast để ghi đè)
 import './assets/polish.css'; // chuẩn hoá thành phần dùng chung giữa các view
+import { installSelectMenu } from './utils/selectMenu'
+installSelectMenu() // menu select gọn, thay menu gốc của hệ điều hành
 
 
 const app = createApp(App);

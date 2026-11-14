@@ -60,3 +60,30 @@ export function attachProjectHooks(schema: Schema) {
     if (this._wsRelevant) notify(res?._id ?? this._wsProject);
   });
 }
+
+const USECASE_PROGRESS_ONLY = /^(implementation|bug)(\.|$)/;
+
+/**
+ * Any change to a use case (created, edited, deleted, or a creation undone in the preview) tells the WorkHub sync,
+ * whichever code path wrote it. Writes that only record progress reported back from WorkHub (`implementation`) are
+ * ignored, otherwise every sync would trigger the next one.
+ */
+export function attachUsecaseHooks(schema: Schema) {
+  schema.post("save", function (doc: any) { notify(doc?.project_id); });
+  schema.post("insertMany", function (docs: any) { for (const d of Array.isArray(docs) ? docs : [docs]) notify(d?.project_id); });
+  schema.pre(QUERY_OPS as any, async function (this: any) {
+    try {
+      const u = this.getUpdate?.() ?? {};
+      const keys = [...Object.keys(u).filter((k) => !k.startsWith("$")), ...Object.values(u).filter((v) => v && typeof v === "object").flatMap((v: any) => Object.keys(v))];
+      this._ucProgressOnly = keys.length > 0 && keys.every((k) => USECASE_PROGRESS_ONLY.test(k));
+      const f = this.getFilter?.() ?? {};
+      if (f.project_id) { this._ucProject = f.project_id; return; }
+      const d = await this.model.findOne(f).select("project_id").lean();
+      this._ucProject = d?.project_id;
+    } catch { /* best effort */ }
+  });
+  schema.post(QUERY_OPS as any, function (this: any, res: any) {
+    if (this._ucProgressOnly) return;
+    notify(res?.project_id ?? this._ucProject);
+  });
+}

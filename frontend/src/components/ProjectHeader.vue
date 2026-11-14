@@ -168,6 +168,8 @@
             <span class="label">Thành viên</span>
           </div>
         </button>
+
+        <AccountMenu />
       </div>
     </div>
   </div>
@@ -182,9 +184,11 @@ import {
 } from '@/utils/versionSync'
 import { rollbackVersion, setCurrentVersion } from '@/api/version'
 import WorkhubChip from '@/components/workhub/WorkhubChip.vue'
+import AccountMenu from '@/components/AccountMenu.vue'
 export default {
   name: 'ProjectHeaderModern',
-  components: { WorkhubChip },
+  components: {
+    AccountMenu, WorkhubChip },
   props: {
     project: {
       type: Object,

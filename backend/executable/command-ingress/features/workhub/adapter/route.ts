@@ -110,6 +110,11 @@ export function initWorkhubCallbackRoute(): Router {
     try { res.json(await workhubSyncService.upsertProject(req.body ?? {})); }
     catch (e: any) { res.status(500).json({ success: false, message: e?.message ?? "error" }); }
   });
+  router.post("/usecase-upsert", async (req, res) => {
+    if (req.header("x-bridge-key") !== env.BRIDGE_SECRET) return void res.status(401).json({ success: false });
+    try { res.json(await workhubSyncService.upsertUsecase(req.body ?? {})); }
+    catch (e: any) { res.status(500).json({ ok: false, reason: e?.message ?? "error" }); }
+  });
   router.post("/progress", async (req, res) => {
     if (req.header("x-bridge-key") !== env.BRIDGE_SECRET) return void res.status(401).json({ success: false });
     const b = req.body ?? {};

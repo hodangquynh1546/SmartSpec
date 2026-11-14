@@ -1,6 +1,6 @@
 import express from "express";
 import { UserController } from "./controller";
-import { requireAuthorizedUser, requireRole } from "../../../middlewares/auth";
+import { requireAuthorizedUser, requireInteractiveSession, requireRole } from "../../../middlewares/auth";
 
 const initUserRoute: (controller: UserController) => express.Router = (
   controller
@@ -59,6 +59,13 @@ const initUserRoute: (controller: UserController) => express.Router = (
       requireRole("ADMIN"),
       controller.resetPasswordById.bind(controller)
     );
+
+  // Tự xoá tài khoản của mình (phải đặt trước "/:id"); token cá nhân (ssp_) không được dùng.
+  router.route("/me").delete(requireAuthorizedUser, requireInteractiveSession, async (req: any, res) => {
+    const r = await (controller as any).service.deleteOwnAccount(req.getSubject(), req.body?.password);
+    if (r.ok) return void res.status(204).end();
+    res.status(r.code === "WRONG_PASSWORD" ? 403 : r.code === "OWNS_PROJECTS" ? 409 : 404).json({ status: "Error", code: r.code, message: r.message });
+  });
 
   router
     .route("/:id")

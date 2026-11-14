@@ -1,7 +1,7 @@
 <template>
   <div class="field-value-renderer">
     <!-- String value -->
-    <div v-if="isString" class="value-string">{{ value }}</div>
+    <div v-if="isString" class="value-string">{{ formatSimpleValue(value) }}</div>
 
     <!-- Number value -->
     <div v-else-if="isNumber" class="value-number">{{ value }}</div>
@@ -9,7 +9,7 @@
     <!-- Boolean value -->
     <div v-else-if="isBoolean" class="value-boolean">
       <span class="boolean-badge" :class="{ true: value, false: !value }">
-        {{ value ? 'Yes' : 'No' }}
+        {{ value ? 'Có' : 'Không' }}
       </span>
     </div>
 
@@ -30,7 +30,7 @@
 
     <!-- Object value -->
     <div v-else-if="isObject" class="value-object">
-      <div v-for="(val, key) in value" :key="key" class="object-item">
+      <div v-for="[key, val] in visibleEntries" :key="key" class="object-item">
         <span class="object-key">{{ formatKey(key) }}:</span>
         <FieldValueRenderer
           v-if="isComplexValue(val)"
@@ -51,6 +51,7 @@
 
 <script>
 import { fieldLabel } from '@/utils/fieldLabels'
+import { isVisibleEntry } from '@/utils/hideTechnical'
 export default {
   name: 'FieldValueRenderer',
   props: {
@@ -67,6 +68,9 @@ export default {
     },
   },
   computed: {
+    visibleEntries() {
+      return this.isObject ? Object.entries(this.value).filter(([k, v]) => isVisibleEntry(k, v)) : []
+    },
     isString() {
       return typeof this.value === 'string'
     },
@@ -96,8 +100,9 @@ export default {
     },
     formatSimpleValue(val) {
       if (val === null || val === undefined) return 'Chưa đặt'
-      if (typeof val === 'boolean') return val ? 'Yes' : 'No'
-      return String(val)
+      if (typeof val === 'boolean') return val ? 'Có' : 'Không'
+      const VALUE_LABELS = { use_case: 'Use case', system: 'Hệ thống', user: 'Người dùng', business: 'Nghiệp vụ', active: 'Đang dùng', deprecated: 'Ngừng dùng', high: 'Cao', medium: 'Trung bình', low: 'Thấp', critical: 'Nghiêm trọng', draft: 'Nháp' }
+      return VALUE_LABELS[String(val)] ?? String(val)
     },
   },
 }

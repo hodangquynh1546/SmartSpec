@@ -213,6 +213,30 @@ export class UserServiceImpl implements UserService {
     return "User deleted successfully";
   }
 
+  /**
+   * The person deletes their own account (needs the password). Refused while they still own a project (transfer or
+   * delete it first, like WorkHub's workspaces). Memberships, sessions, tokens and the WorkHub link go; the row is deleted.
+   */
+  async deleteOwnAccount(userId: string, password: string): Promise<{ ok: boolean; code?: string; message?: string }> {
+    const user = await User.findById(userId);
+    if (!user) return { ok: false, code: "NOT_FOUND", message: "Không tìm thấy tài khoản" };
+    if (!user.password || !(await bcrypt.compare(String(password ?? ""), user.password))) {
+      return { ok: false, code: "WRONG_PASSWORD", message: "Mật khẩu không đúng" };
+    }
+    const Project = (await import("../../../../../internal/model/project")).default;
+    const AccessToken = (await import("../../../../../internal/model/access_token")).default;
+    const owned = await Project.countDocuments({ owner_id: user._id, "status.is_trashed": { $ne: true } });
+    if (owned > 0) {
+      return { ok: false, code: "OWNS_PROJECTS", message: `Bạn còn là chủ ${owned} dự án. Hãy xoá dự án hoặc chuyển quyền sở hữu trước.` };
+    }
+    await Project.updateMany({ "members.user_id": user._id }, { $pull: { members: { user_id: user._id } } });
+    await Session.deleteMany({ userID: user._id });
+    await AccessToken.deleteMany({ user_id: user._id });
+    await workhubSyncService.unlinkUser(String(user._id)).catch(() => undefined);
+    await User.deleteOne({ _id: user._id });
+    return { ok: true };
+  }
+
   async searchUsersByNameOrEmail(content: string): Promise<UserResponse[]> {
     const regex = new RegExp(String(content ?? "").replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i"); // tìm theo chữ, không phải biểu thức chính quy
     const users = await User.find({

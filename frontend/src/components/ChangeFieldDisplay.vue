@@ -24,6 +24,7 @@
 <script>
 import FieldValueRenderer from './FieldValueRenderer.vue'
 import { fieldLabel } from '@/utils/fieldLabels'
+import { isVisibleEntry } from '@/utils/hideTechnical'
 
 export default {
   name: 'ChangeFieldDisplay',
@@ -47,7 +48,7 @@ export default {
       const filtered = {}
       
       for (const key in this.data) {
-        if (importantFields.includes(key) || this.shouldIncludeField(key)) {
+        if ((importantFields.includes(key) || this.shouldIncludeField(key)) && isVisibleEntry(key, this.data[key])) {
           filtered[key] = this.data[key]
         }
       }

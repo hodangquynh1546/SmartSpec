@@ -256,65 +256,13 @@
                 <div
                   v-for="activity in paginatedActivities"
                   :key="activity._id"
-                  class="log-item"
-                  :class="[
-                    getActivityType(activity),
-                    getActionType(activity),
-                    { highlighted: isHighlighted(activity) },
-                  ]"
+                  class="log-line"
+                  :class="{ highlighted: isHighlighted(activity) }"
                 >
-                  <div class="log-icon" :class="getActivityType(activity)">
-                    <span class="material-symbols-outlined">{{ getActivityIcon(activity) }}</span>
-                  </div>
-
-                  <div class="log-content">
-                    <div class="log-header">
-                      <div class="log-user-info">
-                        <div 
-                          class="user-avatar-small"
-                          :title="activity.user_id?.name || 'System'"
-                        >
-                          <img
-                            v-if="activity.user_id?.avatar_url"
-                            :src="activity.user_id.avatar_url"
-                            :alt="activity.user_id.name"
-                            @error="(e) => (e.target.style.display = 'none')"
-                          />
-                          <span v-else class="material-symbols-outlined">person</span>
-                        </div>
-                        <span class="log-user-name">{{ activity.user_id?.name || 'System' }}</span>
-                        <span v-if="activity.performed_by_ai" class="ai-badge" title="Thực hiện bởi AI">
-                          <span class="material-symbols-outlined">smart_toy</span>
-                          AI
-                        </span>
-                      </div>
-                      <div class="log-action-badges">
-                        <span class="log-action-badge">{{ formatAction(activity.action) }}</span>
-                        <span class="log-target-badge">{{ formatTarget(activity.target_type) }}</span>
-                        <span v-if="activity.version_number" class="log-version-badge" :title="`Version ${activity.version_number}`">
-                          <span class="material-symbols-outlined">history</span>
-                          v{{ activity.version_number }}
-                        </span>
-                      </div>
-                    </div>
-
-                    <div class="log-message">
-                      <span v-html="highlightKeywords(formatActivityText(activity))"></span>
-                    </div>
-
-                    <div class="log-meta">
-                      <div class="log-meta-left">
-                        <span class="log-time" :title="formatFullTime(activity.created_at)">
-                          <span class="material-symbols-outlined">schedule</span>
-                          {{ formatTime(activity.created_at) }}
-                        </span>
-                        <span v-if="activity.affects_requirement" class="log-requirement-badge" title="Ảnh hưởng đến yêu cầu">
-                          <span class="material-symbols-outlined">description</span>
-                          Yêu cầu
-                        </span>
-                      </div>
-                    </div>
-                  </div>
+                  <span class="log-line-time" :title="formatFullTime(activity.created_at)">{{ formatTime(activity.created_at) }}</span>
+                  <span class="log-line-text" v-html="highlightKeywords(formatActivityText(activity))"></span>
+                  <span v-if="activity.performed_by_ai" class="log-line-tag" title="Thực hiện bởi AI">AI</span>
+                  <span v-if="activity.version_number" class="log-line-tag" :title="`Phiên bản ${activity.version_number}`">v{{ activity.version_number }}</span>
                 </div>
               </div>
             </div>
@@ -862,8 +810,10 @@ export default {
 
     formatActivityText(activity) {
       // Use details.message if available (preferred)
-      if (activity.details?.message) {
-        return activity.details.message
+      // Câu đã lưu chỉ dùng khi là tiếng Việt và không chứa mã nội bộ; còn lại dựng lại từ hành động/đối tượng
+      const stored = activity.details?.message
+      if (stored && / (đã|vừa) /.test(stored) && !/[0-9a-f]{24}/.test(stored) && !/\b(created|imported|saved|updated|deleted|generated)\b/i.test(stored)) {
+        return stored
       }
 
       // Fallback to default formatting with better messages
@@ -879,18 +829,18 @@ export default {
         update_input: `${userName} đã sửa đầu vào`,
         delete_input: `${userName} đã xoá đầu vào`,
         generate_output: activity.target_type === 'testcases'
-          ? `${userName} đã sinh ${after.count || 'test case'}`
+          ? `${userName} đã sinh ${after.count ? after.count + ' ' : ''}test case`
           : activity.target_type === 'activity_diagrams'
-          ? `${userName} đã sinh sơ đồ hoạt động "${after.name || ''}"`
+          ? `${userName} đã sinh sơ đồ hoạt động ${after.name ? '"' + after.name + '"' : ''}`
           : activity.target_type === 'sequence_diagrams'
-          ? `${userName} đã sinh sơ đồ tuần tự "${after.name || ''}"`
+          ? `${userName} đã sinh sơ đồ tuần tự ${after.name ? '"' + after.name + '"' : ''}`
           : activity.target_type === 'usecase_diagrams'
-          ? `${userName} đã sinh sơ đồ use case "${after.name || ''}"`
+          ? `${userName} đã sinh sơ đồ use case ${after.name ? '"' + after.name + '"' : ''}`
           : `${userName} đã sinh ${tgt}`,
         update_output: `${userName} đã cập nhật ${tgt}`,
         delete_output: `${userName} đã xoá ${tgt}`,
         export_data: `${userName} đã xuất ${tgt}`,
-        create_table: `${userName} đã tạo bảng "${after.name || ''}"`,
+        create_table: `${userName} đã tạo bảng ${after.name ? '"' + after.name + '"' : ''}`,
         update_table: `${userName} đã sửa bảng`,
         delete_table: `${userName} đã xoá bảng`,
         create_column: `${userName} đã thêm cột`,
@@ -903,7 +853,7 @@ export default {
         update_version: `${userName} đã cập nhật phiên bản ${activity.version_number || ''}`,
         delete_version: `${userName} đã xoá phiên bản ${activity.version_number || ''}`,
         rollback: `${userName} đã quay lui về phiên bản ${after.version_number || ''}`,
-        create_project: `${userName} đã tạo dự án "${after.name || ''}"`,
+        create_project: `${userName} đã tạo dự án ${after.name ? '"' + after.name + '"' : ''}`,
         update_project: `${userName} đã cập nhật dự án`,
         delete_project: `${userName} đã xoá dự án`,
         restore_project: `${userName} đã khôi phục dự án`,

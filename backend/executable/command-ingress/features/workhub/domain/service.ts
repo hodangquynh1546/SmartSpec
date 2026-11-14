@@ -10,6 +10,7 @@ import { setDesignChangedListener } from "../../../../../internal/hooks/design-c
 import { ROOT_FOLDER, activityDiagram, databaseDocument, diagramDocument, sequenceDiagram, slug, srsDocument, testPlanDocument, useCaseDiagram, type DesignDoc } from "./design.export";
 import Version from "../../../../../internal/model/version";
 import User from "../../../../../internal/model/user";
+import { UsecaseService } from "../../usecase/domain/service";
 import env from "../../../utils/env";
 import { bridgeClient, BridgeError } from "./bridge.client";
 import { workhubSocketService } from "./workhub.socket.service";
@@ -43,6 +44,26 @@ export const toImplementation = (p: BridgeProgress) => ({
   start_date: p.startDate, due_date: p.dueDate, story_points: p.storyPoints,
   blocked: p.blocked, blocked_reason: p.blockedReason, started_at: p.startedAt, done_at: p.doneAt,
   child_count: p.childCount, child_done_count: p.childDoneCount, deleted: p.deleted,
+});
+
+/** A use case as ForgeBridge sees it (stable `key` = lineage, not the per-version id). */
+export const toPayloadUsecase = (u: any) => ({
+  key: u.lineage_id || String(u._id),
+  name: u.name,
+  type: u.type,
+  description: u.description,
+  goal: u.goal,
+  business_reason: u.business_reason,
+  priority: u.priority,
+  actor: u.actor ? { name: u.actor.name } : null,
+  context: u.context ? { module: u.context.module } : null,
+  preconditions: u.preconditions,
+  main_flow: u.main_flow,
+  alternative_flows: u.alternative_flows,
+  exceptions: u.exceptions,
+  postconditions: u.postconditions,
+  rules: u.rules,
+  non_functional_constraints: u.non_functional_constraints,
 });
 
 /**
@@ -139,24 +160,7 @@ export class WorkhubSyncService {
       members: memberRows.map((m: any) => ({ ssUserId: String(m.user_id), email: emailOf.get(String(m.user_id)) ?? "", role: m.role })).filter((m) => m.email),
       project: { id: String(project._id), name: project.name, description: project.description },
       version: { id: String(version._id), number: version.version_number ?? `${version.version_major}.${version.version_minor}` },
-      usecases: usecases.map((u) => ({
-        key: u.lineage_id || String(u._id),
-        name: u.name,
-        type: u.type,
-        description: u.description,
-        goal: u.goal,
-        business_reason: u.business_reason,
-        priority: u.priority,
-        actor: u.actor ? { name: u.actor.name } : null,
-        context: u.context ? { module: u.context.module } : null,
-        preconditions: u.preconditions,
-        main_flow: u.main_flow,
-        alternative_flows: u.alternative_flows,
-        exceptions: u.exceptions,
-        postconditions: u.postconditions,
-        rules: u.rules,
-        non_functional_constraints: u.non_functional_constraints,
-      })),
+      usecases: usecases.map(toPayloadUsecase),
     };
   }
 
@@ -404,6 +408,16 @@ export class WorkhubSyncService {
     }
     const p: any = await Project.findById(b.ssProjectId);
     if (!p) return { changed: false };
+    // Deleted/archived in WorkHub → SmartSpec trash; reopened in WorkHub → restored. Written directly (not through
+    // projectTrashed/projectRestored) so it does not bounce back to WorkHub.
+    if (b.whDeleted || b.whArchived) {
+      if (!p.status?.is_trashed) await Project.updateOne({ _id: p._id }, { $set: { "status.is_trashed": true, "status.trashed_at": new Date() } });
+      return { changed: true, name: p.name, description: p.description ?? "" };
+    }
+    if (b.whRestored) {
+      if (p.status?.is_trashed) await Project.updateOne({ _id: p._id }, { $set: { "status.is_trashed": false }, $unset: { "status.trashed_at": "" } });
+      return { changed: true, name: p.name, description: p.description ?? "" };
+    }
     let changed = false;
     const wh = { name: norm(b.wh?.name), description: norm(b.wh?.description) };
     const base = b.base ? { name: norm(b.base.name), description: norm(b.base.description) } : null;
@@ -424,8 +438,61 @@ export class WorkhubSyncService {
         changed = true;
       }
     }
+    // people removed from the WorkHub project (that WorkHub had added from here) leave the SmartSpec project too
+    const gone = (b.removeEmails ?? []).map((e: string) => String(e).toLowerCase());
+    if (gone.length) {
+      const users: any[] = await User.find({ email: { $in: gone } }).select("_id").lean();
+      const ids = new Set(users.map((u) => String(u._id)));
+      const before = p.members.length;
+      p.members = p.members.filter((m: any) => String(m.user_id) === String(p.owner_id) || !ids.has(String(m.user_id)));
+      if (p.members.length !== before) changed = true;
+    }
     if (changed) await p.save();
     return { changed, name: p.name, description: p.description ?? "" };
+  }
+
+  /**
+   * Inbound from WorkHub (through the Bridge): a story created or edited there becomes / updates a use case in the
+   * working version, as a person's edit would (preview change for the owner to approve). Returns the use case as the
+   * Bridge needs it, so both sides end with identical content.
+   */
+  async upsertUsecase(b: any) {
+    const version = await this.specVersion(b.ssProjectId);
+    if (!version) return { ok: false, reason: "no version" };
+    const actor = String(b.actorSsUserId ?? "");
+    const f = b.fields ?? {};
+    const svc = new UsecaseService();
+    const pick = (o: any) => Object.fromEntries(Object.entries(o).filter(([, v]) => v !== undefined));
+    if (b.key) {
+      const or: any[] = [{ lineage_id: b.key }];
+      if (/^[a-f\d]{24}$/i.test(String(b.key))) or.push({ _id: b.key });
+      const existing: any = await Usecase.findOne({ version_id: version._id, $or: or }).lean();
+      if (!existing) return { ok: false, reason: "missing" };
+      const merged: any = { ...existing, ...pick({
+        name: f.name, description: f.description, goal: f.goal, business_reason: f.business_reason, priority: f.priority,
+        actor: f.actorName ? { ...(existing.actor ?? {}), name: f.actorName } : undefined, preconditions: f.preconditions, main_flow: f.main_flow,
+        postconditions: f.postconditions, non_functional_constraints: f.non_functional_constraints, rules: f.rules,
+        context: f.module ? { ...(existing.context ?? {}), module: f.module } : undefined,
+      }) };
+      delete merged._id; delete merged.__v; delete merged.project_id; delete merged.version_id; delete merged.audit; delete merged.implementation;
+      const res = await svc.updateUsecaseInVersion(String(version._id), String(existing._id), actor, merged);
+      if (!res.success) return { ok: false, reason: res.message };
+      const after: any = await Usecase.findOne({ project_id: b.ssProjectId, $or: or }).sort({ updated_at: -1 }).lean();
+      return { ok: true, usecase: toPayloadUsecase(after ?? existing) };
+    }
+    const dto: any = {
+      name: String(f.name ?? "").trim() || "Use case từ WorkHub", description: f.description ?? f.name ?? "", goal: f.goal ?? "", business_reason: f.business_reason ?? "",
+      priority: f.priority ?? "medium", actor: { name: f.actorName || "Người dùng" }, context: { module: f.module || "" },
+      preconditions: f.preconditions ?? [], postconditions: f.postconditions ?? [], rules: f.rules ?? [], non_functional_constraints: f.non_functional_constraints ?? [],
+      main_flow: f.main_flow?.length ? f.main_flow : [{ step: 1, actor: f.actorName || "Người dùng", action: String(f.name ?? "").trim(), expected_result: "" }],
+    };
+    const res = await svc.addUsecaseToVersion(String(version._id), actor, dto);
+    if (!res.success) return { ok: false, reason: res.message };
+    const created: any = res.data?.usecase ?? res.data;
+    const doc: any = created?._id ? await Usecase.findById(created._id).lean() : null;
+    if (!doc) return { ok: false, reason: "not created" };
+    if (!doc.lineage_id) await Usecase.updateOne({ _id: doc._id }, { $set: { lineage_id: String(doc._id) } });
+    return { ok: true, usecase: toPayloadUsecase({ ...doc, lineage_id: doc.lineage_id || String(doc._id) }) };
   }
 
   async unlinkUser(userId: string) {

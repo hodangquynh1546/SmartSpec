@@ -2,6 +2,7 @@
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { useToast } from 'vue-toastification'
+import AppSelect from '@/components/AppSelect.vue'
 import axiosClient from '@/utils/axiosClient'
 import { socket } from '@/utils/socket'
 import { openWorkhub, workhub, fetchUserStatus, loadProject, syncNow, workhubErrorMessage } from '@/composables/useWorkhub'
@@ -35,7 +36,31 @@ async function load() {
 
 // Tiến độ realtime (workhub.progress) ưu tiên hơn bản đã tải
 const impl = (item) => workhub.progress[item.key] || item.implementation
-const items = computed(() => board.value.items.map((i) => ({ ...i, impl: impl(i) })))
+const allItems = computed(() => board.value.items.map((i) => ({ ...i, impl: impl(i) })))
+
+// Bảng theo sprint: danh sách sprint lấy từ chính các task (tên + trạng thái); chọn sprint nào thì hiện bảng của sprint đó
+const SPRINT_ORDER = { ACTIVE: 0, FUTURE: 1, COMPLETED: 2, CANCELLED: 3 }
+const SPRINT_STATUS = { ACTIVE: 'Đang chạy', FUTURE: 'Sắp tới', COMPLETED: 'Đã xong', CANCELLED: 'Đã huỷ' }
+const sprints = computed(() => {
+  const m = new Map()
+  for (const i of allItems.value) {
+    const name = i.impl?.sprint
+    if (!name) continue
+    const e = m.get(name) || { name, status: i.impl.sprint_status || 'FUTURE', count: 0 }
+    e.count++
+    m.set(name, e)
+  }
+  return Array.from(m.values()).sort((a, b) => (SPRINT_ORDER[a.status] ?? 9) - (SPRINT_ORDER[b.status] ?? 9) || a.name.localeCompare(b.name))
+})
+const noSprintCount = computed(() => allItems.value.filter((i) => !i.impl?.sprint).length)
+const sprintSel = ref(null) // null = chưa chọn: tự chọn sprint đang chạy (không có thì "Tất cả")
+const effectiveSprint = computed(() => sprintSel.value ?? sprints.value.find((s) => s.status === 'ACTIVE')?.name ?? '__all')
+const items = computed(() => {
+  const sel = effectiveSprint.value
+  if (sel === '__all') return allItems.value
+  if (sel === '__none') return allItems.value.filter((i) => !i.impl?.sprint)
+  return allItems.value.filter((i) => i.impl?.sprint === sel)
+})
 const synced = computed(() => items.value.filter((i) => i.impl?.issue_key && !i.impl.deleted))
 const deleted = computed(() => items.value.filter((i) => i.impl?.deleted))
 const waiting = computed(() => items.value.filter((i) => !i.impl?.issue_key))
@@ -60,7 +85,21 @@ const openBugs = (i) => (i.bugs || []).filter((b) => b.status !== 'DONE')
 const projectState = computed(() => workhub.projects[projectId.value] || {})
 const initials = (name) => (name || '?').split(/\s+/).map((w) => w[0]).slice(0, 2).join('').toUpperCase()
 const overdue = (i) => i.impl?.due_date && i.impl.status !== 'DONE' && new Date(i.impl.due_date) < new Date(new Date().toDateString())
-const fmtDate = (d) => (d ? new Date(d).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' }) : '')
+const fmtDate = (d) => {
+  if (!d) return ''
+  const t = new Date(d)
+  return `${String(t.getDate()).padStart(2, '0')}/${String(t.getMonth() + 1).padStart(2, '0')}`
+}
+// Dòng mô tả sprint đang xem: tên sprint (không thêm chữ "Sprint" nếu tên đã có), trạng thái và hạn nếu là sprint đang chạy
+const sprintLine = computed(() => {
+  const name = effectiveSprint.value
+  if (name === '__all' || name === '__none') return ''
+  const sp = sprints.value.find((s) => s.name === name)
+  const label = /sprint/i.test(name) ? name : `Sprint ${name}`
+  const active = board.value.activeSprint
+  const end = active && active.name === name && active.endDate ? ` · đến ${fmtDate(active.endDate)}` : ''
+  return `${label}${sp ? ` (${SPRINT_STATUS[sp.status] || sp.status})` : ''}${end}`
+})
 
 async function setStatus(item, status) {
   if (item.impl?.status === status) return
@@ -128,7 +167,7 @@ onBeforeUnmount(() => {
       <button class="primary" type="button" @click="((workhub.dismissed = false), (workhub.modalOpen = true))">Liên kết WorkHub</button>
     </div>
 
-    <div v-else-if="!total" class="empty card">
+    <div v-else-if="!allItems.length" class="empty card">
       <h2>Chưa có use case để theo dõi</h2>
       <p>Khi dự án có một phiên bản đặc tả hoàn tất, các use case sẽ tự được tạo thành task trong WorkHub.</p>
     </div>
@@ -137,6 +176,16 @@ onBeforeUnmount(() => {
       <p v-if="projectState.paused" class="banner">Đồng bộ với WorkHub đang tạm dừng. Dữ liệu dưới đây là lần đồng bộ cuối; chủ dự án có thể tiếp tục từ menu ⋯ ở đầu trang.</p>
       <p v-else-if="projectState.archived" class="banner">Dự án WorkHub đang được lưu trữ vì dự án này ở thùng rác. Khôi phục dự án để mở lại.</p>
 
+      <nav class="sprint-bar" aria-label="Chọn sprint">
+        <button type="button" :class="{ on: effectiveSprint === '__all' }" @click="sprintSel = '__all'">Tất cả <small>{{ allItems.length }}</small></button>
+        <button v-for="sp in sprints" :key="sp.name" type="button" :class="{ on: effectiveSprint === sp.name }" @click="sprintSel = sp.name">
+          {{ sp.name }}
+          <span class="sp-state" :class="sp.status.toLowerCase()">{{ SPRINT_STATUS[sp.status] || sp.status }}</span>
+          <small>{{ sp.count }}</small>
+        </button>
+        <button type="button" :class="{ on: effectiveSprint === '__none' }" @click="sprintSel = '__none'">Chưa vào sprint <small>{{ noSprintCount }}</small></button>
+      </nav>
+
       <section class="summary card">
         <div class="summary-top">
           <div>
@@ -144,7 +193,7 @@ onBeforeUnmount(() => {
             <h1>{{ donePercent }}% hoàn thành</h1>
             <p class="muted">
               {{ items.filter((i) => i.impl?.status === 'DONE').length }}/{{ total }} use case đã xong
-              <template v-if="board.activeSprint"> · Sprint <b>{{ board.activeSprint.name }}</b><template v-if="board.activeSprint.endDate"> đến {{ fmtDate(board.activeSprint.endDate) }}</template></template>
+              <template v-if="sprintLine"> · <b>{{ sprintLine }}</b></template>
             </p>
           </div>
           <div class="summary-actions">
@@ -186,9 +235,7 @@ onBeforeUnmount(() => {
               <span v-if="i.impl.due_date" class="tag" :class="{ bad: overdue(i) }">Hạn {{ fmtDate(i.impl.due_date) }}</span>
               <a v-for="b in openBugs(i)" :key="b.key" class="tag bad" :href="b.url" target="_blank" rel="noopener" @click.prevent="openWorkhub(b.url)" :title="b.testcase">🐞 {{ b.key }}</a>
             </div>
-            <select :value="i.impl.status" :disabled="busy[i.key]" aria-label="Đổi trạng thái" @change="setStatus(i, $event.target.value)">
-              <option v-for="c in COLUMNS" :key="c.id" :value="c.id">{{ c.name }}</option>
-            </select>
+            <AppSelect :model-value="i.impl.status" :options="COLUMNS.map((c) => ({ value: c.id, label: c.name }))" :disabled="busy[i.key]" aria-label="Đổi trạng thái" @change="(v) => setStatus(i, v)" />
           </article>
         </div>
       </section>
@@ -211,6 +258,13 @@ onBeforeUnmount(() => {
 </template>
 
 <style scoped>
+.sprint-bar { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
+.sprint-bar button { display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; font-size: 12.5px; border: 1px solid var(--border-strong); background: var(--surface); color: var(--text); border-radius: 999px; cursor: pointer; }
+.sprint-bar button.on { background: var(--ink); color: var(--ink-text); border-color: var(--ink); }
+.sprint-bar small { opacity: 0.65; }
+.sp-state { font-size: 10.5px; padding: 1px 7px; border-radius: 999px; background: var(--sunken); color: var(--muted); }
+.sp-state.active { background: var(--success-soft); color: var(--success); }
+.sprint-bar .on .sp-state { background: rgb(255 255 255 / 0.18); color: inherit; }
 .tasks { padding: 20px var(--gutter) 48px; display: grid; gap: 20px; color: var(--text); }
 .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px; }
 .empty { text-align: center; color: var(--muted); padding: 56px 16px; }

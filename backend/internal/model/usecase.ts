@@ -1,5 +1,6 @@
 import { InferSchemaType, model, Schema } from "mongoose";
 import { randomUUID } from "crypto";
+import { attachUsecaseHooks } from "../hooks/design-changed";
 
 // Schema cho Actor (thay thế role) - relaxed validation
 export const actorSchema = new Schema({
@@ -272,4 +273,5 @@ usecaseSchema.index({ project_id: 1, priority: 1 });
 usecaseSchema.index({ version_id: 1, priority: 1 });
 
 type UsecaseSchemaInferType = InferSchemaType<typeof usecaseSchema>;
+attachUsecaseHooks(usecaseSchema); // mọi đường ghi/xoá use case (kể cả hoàn tác ở bản xem trước) → đồng bộ WorkHub
 export default model<UsecaseSchemaInferType>("usecases", usecaseSchema);

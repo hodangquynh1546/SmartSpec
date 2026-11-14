@@ -261,10 +261,38 @@
           </div>
         </div>
 
+        <div v-if="selectedUseCases.length > 0" class="bulk-actions">
+            <div class="bulk-info">
+              <span class="material-symbols-outlined">check_circle</span>
+              {{ selectedUseCases.length }} use case đã chọn
+              <button class="btn-link" type="button" @click="selectAllFiltered">Chọn tất cả ({{ filteredUseCases.length }})</button>
+              <button class="btn-link" type="button" @click="selectedUseCases = []">Bỏ chọn</button>
+            </div>
+            <div class="bulk-buttons">
+              <button class="btn-secondary" @click="showBulkRoleModal = true" :disabled="loading">
+                <span class="material-symbols-outlined">group</span>
+                Đổi vai trò
+              </button>
+              <button
+                class="btn-secondary"
+                @click="showBulkPriorityModal = true"
+                :disabled="loading"
+              >
+                <span class="material-symbols-outlined">priority_high</span>
+                Đổi độ ưu tiên
+              </button>
+              <button class="btn-secondary danger" @click="bulkDelete" :disabled="loading">
+                <span class="material-symbols-outlined">delete</span>
+                Xoá mục đã chọn
+              </button>
+            </div>
+          </div>
+
         <!-- Table View -->
         <div v-if="viewMode === 'table'" class="usecase-table-view">
           <!-- Sorting Options -->
-          <div class="sorting-section">
+
+<div class="sorting-section">
             <span class="sort-label">Sắp xếp theo:</span>
             <div class="sort-options">
               <button
@@ -461,30 +489,7 @@
           </div>
 
           <!-- Bulk Actions -->
-          <div v-if="selectedUseCases.length > 0" class="bulk-actions">
-            <div class="bulk-info">
-              <span class="material-symbols-outlined">check_circle</span>
-              {{ selectedUseCases.length }} use case đã chọn
-            </div>
-            <div class="bulk-buttons">
-              <button class="btn-secondary" @click="showBulkRoleModal = true" :disabled="loading">
-                <span class="material-symbols-outlined">group</span>
-                Đổi vai trò
-              </button>
-              <button
-                class="btn-secondary"
-                @click="showBulkPriorityModal = true"
-                :disabled="loading"
-              >
-                <span class="material-symbols-outlined">priority_high</span>
-                Đổi độ ưu tiên
-              </button>
-              <button class="btn-secondary danger" @click="bulkDelete" :disabled="loading">
-                <span class="material-symbols-outlined">delete</span>
-                Xoá mục đã chọn
-              </button>
-            </div>
-          </div>
+          
         </div>
 
         <!-- Use Cases Groups (Grouped View) -->
@@ -517,6 +522,7 @@
               >
                 <div class="usecase-header" @click="toggleUseCase(getUsecaseId(uc))">
                   <div class="usecase-basic-info">
+                    <input type="checkbox" class="uc-select" :value="getUsecaseId(uc)" v-model="selectedUseCases" title="Chọn use case này" @click.stop />
                     <div class="usecase-id-badge">{{ formatUsecaseId(uc, ucIndex) }}</div>
                     <h4 class="usecase-name">{{ uc.name }}<WorkhubBadge :use-case="uc" /></h4>
                     <span class="priority-badge" :class="`priority-${uc.priority}`">
@@ -774,6 +780,7 @@
             @mouseenter="handleUsecaseHover(uc)"
           >
             <div class="grid-card-header">
+              <input type="checkbox" class="uc-select" :value="getUsecaseId(uc)" v-model="selectedUseCases" title="Chọn use case này" @click.stop />
               <div class="grid-card-id">{{ formatUsecaseId(uc, getUseCaseIndex(uc)) }}</div>
               <h4 class="grid-card-name">{{ uc.name }}<WorkhubBadge :use-case="uc" /></h4>
               <div class="grid-card-meta">
@@ -836,6 +843,7 @@
           >
             <div class="list-item-header" @click="toggleUseCase(getUsecaseId(uc))">
               <div class="list-item-main">
+                <input type="checkbox" class="uc-select" :value="getUsecaseId(uc)" v-model="selectedUseCases" title="Chọn use case này" @click.stop />
                 <div class="list-item-id">{{ formatUsecaseId(uc, getUseCaseIndex(uc)) }}</div>
                 <div class="list-item-info">
                   <h4>{{ uc.name }}</h4>
@@ -900,6 +908,7 @@
             @mouseenter="handleUsecaseHover(uc)"
           >
             <div class="compact-item-header">
+              <input type="checkbox" class="uc-select" :value="getUsecaseId(uc)" v-model="selectedUseCases" title="Chọn use case này" @click.stop />
               <div class="compact-id">{{ formatUsecaseId(uc, getUseCaseIndex(uc)) }}</div>
               <div class="compact-info">
                 <h4>{{ uc.name }}</h4>
@@ -1996,6 +2005,9 @@ export default {
       this.pagination.currentPage = 1
     },
     // Selection methods
+    selectAllFiltered() {
+      this.selectedUseCases = this.filteredUseCases.map((uc) => this.getUsecaseId(uc))
+    },
     toggleSelectAll() {
       if (this.selectAll) {
         this.selectedUseCases = this.paginatedUseCases.map((uc) => this.getUsecaseId(uc))

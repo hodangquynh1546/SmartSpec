@@ -210,8 +210,8 @@
                   </span>
                 </div>
                 <div class="change-details">
-                  <span class="entity-name" v-if="change.entity_name">
-                    {{ change.entity_name }}
+                  <span class="entity-name" v-if="changeName(change)">
+                    {{ changeName(change) }}
                   </span>
                 </div>
                 <div class="change-footer">
@@ -311,7 +311,7 @@
           >
             <span v-if="isApproving" class="material-symbols-outlined spin">sync</span>
             <span v-else class="material-symbols-outlined">publish</span>
-            {{ isApproving ? 'Releasing...' : `Release ${changes.length} Change${changes.length > 1 ? 's' : ''}` }}
+            {{ isApproving ? 'Đang phát hành...' : `Phát hành ${changes.length} thay đổi` }}
           </button>
         </div>
       </div>
@@ -729,20 +729,24 @@ export default {
       }
       return types[entityType] || entityType
     },
+    changeName(change) {
+      const s = change.after_snapshot || change.before_snapshot || {}
+      return change.entity_name || s.name || s.title || s.from_table || ''
+    },
     formatEntityTypeShort(entityType) {
       const shortTypes = {
-        requirement: 'REQ',
-        input: 'INP',
-        output: 'OUT',
-        database: 'DB',
-        table: 'TBL',
-        column: 'COL',
-        relationship: 'REL',
-        testcase: 'TST',
+        requirement: 'Yêu cầu',
+        input: 'Đầu vào',
+        output: 'Đầu ra',
+        database: 'CSDL',
+        table: 'Bảng',
+        column: 'Cột',
+        relationship: 'Quan hệ',
+        testcase: 'Test case',
         uml: 'UML',
-        activity_diagram: 'ACT',
-        sequence_diagram: 'SEQ',
-        usecase_diagram: 'UC',
+        activity_diagram: 'Hoạt động',
+        sequence_diagram: 'Tuần tự',
+        usecase_diagram: 'Use case',
       }
       return shortTypes[entityType] || entityType.substring(0, 3).toUpperCase()
     },

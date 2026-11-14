@@ -151,6 +151,25 @@
           </div>
         </div>
 
+        <div class="security-section danger-zone">
+          <h3>Xoá tài khoản</h3>
+          <div class="security-item">
+            <div class="security-info">
+              <h4>Xoá vĩnh viễn tài khoản SmartSpec</h4>
+              <p>Bạn phải xoá hoặc chuyển giao các dự án mình sở hữu trước. Không thể hoàn tác.</p>
+            </div>
+            <button class="btn btn-danger" @click="showDelete = !showDelete">{{ showDelete ? 'Huỷ' : 'Xoá' }}</button>
+          </div>
+          <transition name="fade">
+            <div v-if="showDelete" class="password-form">
+              <input type="password" v-model="deletePassword" placeholder="Nhập mật khẩu để xác nhận" class="form-control" />
+              <button class="btn btn-danger sm" @click="deleteAccount" :disabled="isDeleting || !deletePassword">
+                {{ isDeleting ? 'Đang xoá...' : 'Xoá tài khoản của tôi' }}
+              </button>
+            </div>
+          </transition>
+        </div>
+
         <footer class="form-actions">
           <button class="btn btn-secondary" @click="$emit('close')">Đóng</button>
           <button class="btn btn-primary" @click="saveAllChanges" :disabled="isSavingProfile">
@@ -180,6 +199,9 @@ export default {
       },
       formattedDOB: '',
       showPasswordForm: false,
+      showDelete: false,
+      deletePassword: '',
+      isDeleting: false,
       passwordForm: { current: '', newPass: '' },
       twoFAEnabled: false,
 
@@ -514,7 +536,7 @@ export default {
           this.showNotification({
             type: 'warning',
             title: 'Cảnh báo',
-            message: 'Please fill in all password fields.',
+            message: 'Vui lòng nhập đủ các trường mật khẩu.',
           })
           return
         }
@@ -536,15 +558,29 @@ export default {
         this.showNotification({
           type: 'error',
           title: 'Lỗi',
-          message: err.response?.data?.message || 'Failed to change password.',
+          message: err.response?.data?.message || 'Đổi mật khẩu thất bại.',
         })
       } finally {
         this.isChangingPassword = false
       }
     },
 
+    async deleteAccount() {
+      if (!window.confirm('Xoá vĩnh viễn tài khoản này? Không thể hoàn tác.')) return
+      this.isDeleting = true
+      try {
+        await axiosClient.delete('/api/users/me', { data: { password: this.deletePassword } })
+        ;['accessToken', 'refreshToken', 'adminToken', 'userId'].forEach((k) => localStorage.removeItem(k))
+        window.location.href = '/login'
+      } catch (err) {
+        this.showNotification({ type: 'error', title: 'Lỗi', message: err.response?.data?.message || 'Không xoá được tài khoản.' })
+      } finally {
+        this.isDeleting = false
+      }
+    },
+
     getAvatarColor(name) {
-      const colors = ['#4A90E2', '#50E3C2', '#B8E986', '#F5A623', '#D0021B', '#BD10E0']
+      const colors = ['#0a0a0a']
       return colors[(name?.charCodeAt(0) || 0) % colors.length]
     },
   },
@@ -552,12 +588,14 @@ export default {
 </script>
 
 <style scoped>
+.danger-zone { border-top: 1px solid var(--border); margin-top: 8px; padding-top: 8px; }
+.danger-zone h3 { color: var(--danger); }
 /* FIXED: CSS variables and syntax correction */
 .modal-overlay {
-  --primary-color: #0c2f68;
-  --primary-hover-color: #103a95;
-  --secondary-color: #e5e7eb;
-  --secondary-hover-color: #d1d5db;
+  --primary-color: var(--ink);
+  --primary-hover-color: #2a2a2a;
+  --secondary-color: var(--sunken);
+  --secondary-hover-color: var(--border);
   --danger-color: #ef4444;
   --danger-hover-color: #dc2626;
   --text-primary: #1f2937;
@@ -970,4 +1008,18 @@ export default {
     transform: rotate(360deg);
   }
 }
+</style>
+<style scoped>
+/* Gọn hơn: hộp thoại hẹp, ảnh nhỏ, chữ và khoảng cách vừa phải */
+.modal-content { max-width: 560px !important; padding: 20px 24px !important; }
+.modal-header h2 { font-size: 1.05rem !important; }
+.avatar-img, .avatar-circle.large { width: 72px !important; height: 72px !important; font-size: 28px !important; border-width: 2px !important; }
+.profile-header { gap: 14px !important; }
+.profile-page label { font-size: 12px !important; }
+.form-control { padding: 7px 10px !important; font-size: 13px !important; }
+.security-section h3 { font-size: 0.95rem !important; }
+.security-item h4 { font-size: 13px !important; }
+.security-item p { font-size: 12px !important; }
+.security-item { padding: 8px 0 !important; }
+.form-actions { margin-top: 12px !important; }
 </style>

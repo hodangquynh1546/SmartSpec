@@ -881,47 +881,10 @@
               </div>
             </div>
             <div class="log-list">
-              <div v-for="log in filteredLogs" :key="log.id" class="log-item" :class="log.level">
-                <div class="log-icon-wrapper" :class="log.level">
-                  <span class="material-symbols-outlined">{{ getLogIcon(log) }}</span>
-                </div>
-                <div class="log-content">
-                  <div class="log-header-enhanced">
-                    <div class="log-user-info">
-                      <span class="log-user-name">{{ log.user || 'System' }}</span>
-                      <span class="log-action-type">{{ formatLogAction(log.action) }}</span>
-                    </div>
-                    <div class="log-badges">
-                      <span class="log-type-badge">{{ formatLogType(log.type) }}</span>
-                      <span class="log-status-badge" :class="getLogStatus(log)">
-                        <span class="material-symbols-outlined">{{ getStatusIcon(log) }}</span>
-                        {{ getLogStatusText(log) }}
-                      </span>
-                      <!-- <span class="log-level-badge" :class="log.level">
-                        <span class="material-symbols-outlined">{{ getLevelIcon(log.level) }}</span>
-                        {{ formatLogLevel(log.level) }}
-                      </span> -->
-                    </div>
-                  </div>
-                  <div class="log-message-enhanced">
-                    {{ formatLogMessage(log) }}
-                  </div>
-                  <div class="log-meta-enhanced">
-                    <span class="log-time-enhanced" :title="formatFullTime(log.timestamp)">
-                      <span class="material-symbols-outlined">schedule</span>
-                      {{ formatTime(log.timestamp) }}
-                    </span>
-                    <span v-if="log.ip && log.ip !== '-'" class="log-ip" :title="`IP: ${log.ip}`">
-                      <span class="material-symbols-outlined">language</span>
-                      {{ log.ip }}
-                    </span>
-                  </div>
-                </div>
-                <div class="log-actions">
-                  <button class="btn-icon small" @click="viewLogDetails(log)" title="Xem chi tiết">
-                    <span class="material-symbols-outlined">visibility</span>
-                  </button>
-                </div>
+              <div v-for="log in filteredLogs" :key="log.id" class="log-line" :class="log.level" @click="viewLogDetails(log)" title="Bấm để xem chi tiết">
+                <span class="log-line-time" :title="formatFullTime(log.timestamp)">{{ formatTime(log.timestamp) }}</span>
+                <span class="log-line-text"><b>{{ log.user || 'Hệ thống' }}</b> · {{ formatLogMessage(log) }}</span>
+                <span v-if="getLogStatus(log) === 'failed'" class="log-line-tag bad">Lỗi</span>
               </div>
             </div>
             <div class="log-footer">

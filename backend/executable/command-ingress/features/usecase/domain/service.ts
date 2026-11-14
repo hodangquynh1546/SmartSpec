@@ -2,6 +2,7 @@ import logger from "../../../../../lib/logger";
 // features/usecase/domain/service.ts
 import mongoose, { Types } from 'mongoose';
 import Version from "../../../../../internal/model/version";
+import UserModel from "../../../../../internal/model/user";
 import Project from "../../../../../internal/model/project";
 import Usecase from "../../../../../internal/model/usecase";
 import { ServiceResponse, ResponseStatus } from '../../../services/serviceResponse';
@@ -342,7 +343,7 @@ export class UsecaseService {
         level: "info",
         details: {
           after: newUsecase,
-          message: `${userId} đã tạo use case ${newUsecase.map(uc => uc.name).join(', ')} ở phiên bản ${version.version_number}`
+          message: `${(await UserModel.findById(userId).select('name').lean() as any)?.name ?? 'Một thành viên'} đã tạo use case ${newUsecase.map(uc => uc.name).join(', ')} ở phiên bản ${version.version_number}`
         },
         performed_by_ai: true
       });
@@ -513,7 +514,7 @@ export class UsecaseService {
         details: {
           before: originalUsecase.toObject(),
           after: updatedUsecase.toObject(),
-          message: `${userId} đã cập nhật use case ${originalUsecase.name} ở phiên bản ${version.version_number}`
+          message: `${(await UserModel.findById(userId).select('name').lean() as any)?.name ?? 'Một thành viên'} đã cập nhật use case ${originalUsecase.name} ở phiên bản ${version.version_number}`
         }
       });
 
@@ -629,7 +630,7 @@ export class UsecaseService {
         level: "warning",
         details: {
           before: deletedUsecase.toObject(),
-          message: `${userId} đã xoá use case ${deletedUsecase.name} khỏi phiên bản ${version.version_number}`
+          message: `${(await UserModel.findById(userId).select('name').lean() as any)?.name ?? 'Một thành viên'} đã xoá use case ${deletedUsecase.name} khỏi phiên bản ${version.version_number}`
         }
       });
 

@@ -106,6 +106,7 @@
                 </div>
               </div>
             </div>
+            <AccountMenu />
           </div>
         </header>
 
@@ -391,6 +392,7 @@
 import { useToast } from 'vue-toastification'
 import Sidebar from '@/components/Sidebar.vue'
 import PersonalInfor from '../components/PersonalInfor.vue'
+import AccountMenu from '../components/AccountMenu.vue'
 import ProjectSharingModal from '@/components/ProjectSharingModal.vue'
 import NewProjectModal from '@/components/NewProjectForm.vue'
 import ProjectCard from '@/components/ProjectCard.vue'
@@ -427,6 +429,7 @@ export default {
     ProjectCard,
     AppModal,
     PersonalInfor,
+    AccountMenu,
     ProjectSharingModal,
     InvitationsModal,
     PreviewModal,

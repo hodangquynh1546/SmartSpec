@@ -353,7 +353,35 @@
       </div>
 
       <!-- Sorting Options -->
-      <div class="sorting-section">
+      <div v-if="selectedTestCases.length > 0" class="bulk-actions">
+          <div class="bulk-info">
+            <span class="material-symbols-outlined">check_circle</span>
+            {{ selectedTestCases.length }} test case đã chọn
+          </div>
+          <div class="bulk-buttons">
+            <button class="btn-secondary" @click="bulkExecute('passed')" :disabled="loading">
+              <span class="material-symbols-outlined">check_circle</span>
+              Đánh dấu đạt
+            </button>
+            <button class="btn-secondary" @click="bulkExecute('failed')" :disabled="loading">
+              <span class="material-symbols-outlined">cancel</span>
+              Đánh dấu lỗi
+            </button>
+            <button class="btn-secondary" @click="bulkExecute('not_executed')" :disabled="loading">
+              <span class="material-symbols-outlined">schedule</span>
+              Đánh dấu chưa chạy
+            </button>
+            <button class="btn-danger" @click="bulkDelete" :disabled="loading">
+              <span class="material-symbols-outlined">delete</span>
+              Xoá mục đã chọn
+            </button>
+            <button class="btn-secondary" @click="clearSelection" :disabled="loading">
+              <span class="material-symbols-outlined">close</span>
+              Huỷ
+            </button>
+          </div>
+        </div>
+<div class="sorting-section">
         <span class="sort-label">Sắp xếp theo:</span>
         <div class="sort-options">
           <button
@@ -629,34 +657,7 @@
         </div>
 
         <!-- Bulk Actions -->
-        <div v-if="selectedTestCases.length > 0" class="bulk-actions">
-          <div class="bulk-info">
-            <span class="material-symbols-outlined">check_circle</span>
-            {{ selectedTestCases.length }} test case đã chọn
-          </div>
-          <div class="bulk-buttons">
-            <button class="btn-secondary" @click="bulkExecute('passed')" :disabled="loading">
-              <span class="material-symbols-outlined">check_circle</span>
-              Đánh dấu đạt
-            </button>
-            <button class="btn-secondary" @click="bulkExecute('failed')" :disabled="loading">
-              <span class="material-symbols-outlined">cancel</span>
-              Đánh dấu lỗi
-            </button>
-            <button class="btn-secondary" @click="bulkExecute('not_executed')" :disabled="loading">
-              <span class="material-symbols-outlined">schedule</span>
-              Đánh dấu chưa chạy
-            </button>
-            <button class="btn-danger" @click="bulkDelete" :disabled="loading">
-              <span class="material-symbols-outlined">delete</span>
-              Xoá mục đã chọn
-            </button>
-            <button class="btn-secondary" @click="clearSelection" :disabled="loading">
-              <span class="material-symbols-outlined">close</span>
-              Huỷ
-            </button>
-          </div>
-        </div>
+        
       </div>
     </div>
 
