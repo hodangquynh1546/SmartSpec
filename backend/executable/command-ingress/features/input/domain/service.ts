@@ -108,7 +108,7 @@ export class InputHandleService {
           affects_requirement: false,
           level: "info",
           details: {
-            message: `${username} tried to add inputs but all were duplicates`
+            message: `${username} thêm đầu vào nhưng tất cả đều trùng lặp`
           }
         });
         return new ServiceResponse(ResponseStatus.Success, 'No new inputs were added. All provided inputs were duplicates.', {
@@ -216,7 +216,7 @@ export class InputHandleService {
         affects_requirement: true,
         level: "info",
         details: {
-          message: `${username} added ${newFilesCount} new file(s) and ${newTextProvided ? 'some text' : 'no text'} to version ${version.version_number}`,
+          message: `${username} đã thêm ${newFilesCount} tệp mới và ${newTextProvided ? 'văn bản' : 'không có văn bản'} vào phiên bản ${version.version_number}`,
         }
       });
       const response = new ServiceResponse(ResponseStatus.Success, 'New inputs added successfully. Ready for processing.', {
@@ -367,7 +367,7 @@ export class InputHandleService {
         level: "warning",
         details: {
           before: beforeDelete,
-          message: `${username} deleted input ${inputId} from version ${version.version_number}`
+          message: `${username} đã xoá đầu vào ${inputId} khỏi phiên bản ${version.version_number}`
         }
       });
 
@@ -398,7 +398,7 @@ export class InputHandleService {
         version_number: null,
         affects_requirement: false,
         level: "error",
-        details: { message: `${username} Failed to delete input: ${error.message}` }
+        details: { message: `${username} xoá đầu vào thất bại: ${error.message}` }
       });
       return new ServiceResponse(ResponseStatus.Failed, error.message, null, 500);
     } finally {

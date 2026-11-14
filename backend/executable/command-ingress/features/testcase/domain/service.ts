@@ -710,7 +710,7 @@ export class TestcaseService {
                                 count: savedTestCases.length,
                                 saved_ids: savedTestCases.map((tc: any) => tc._id?.toString() || tc.id)
                             },
-                            message: `${username} saved ${savedTestCases.length} test cases to database`
+                            message: `${username} đã lưu ${savedTestCases.length} test case`
                         }
                     });
                 }
@@ -889,7 +889,7 @@ export class TestcaseService {
             affects_requirement: false,
             level: "info",
             details: {
-                message: `${username} updated testcase ${updatedTestcase?.title || id}`
+                message: `${username} đã cập nhật test case ${updatedTestcase?.title || id}`
             }
         });
         // Return cả testcase và version info để frontend có thể cập nhật selectedVersionId
@@ -1033,7 +1033,7 @@ export class TestcaseService {
             affects_requirement: false,
             level: "warning",
             details: {
-                message: `${username} deleted testcase ${oldTestcase.title}`
+                message: `${username} đã xoá test case ${oldTestcase.title}`
             }
         });
 

@@ -403,22 +403,6 @@
                       </button>
                       <button 
                         class="filter-option" 
-                        :class="{ active: apiFilters.provider === 'gemini' }"
-                        @click="setProviderFilter('gemini')"
-                      >
-                        <span class="material-symbols-outlined">auto_awesome</span>
-                        Gemini
-                      </button>
-                      <button 
-                        class="filter-option" 
-                        :class="{ active: apiFilters.provider === 'openai' }"
-                        @click="setProviderFilter('openai')"
-                      >
-                        <span class="material-symbols-outlined">smart_toy</span>
-                        OpenAI
-                      </button>
-                      <button 
-                        class="filter-option" 
                         :class="{ active: apiFilters.provider === 'claude' }"
                         @click="setProviderFilter('claude')"
                       >
@@ -1625,8 +1609,6 @@ const refreshApiStats = async () => {
         return acc
       }, {})
 
-      apiStats.value.gemini = providerStats['gemini'] || 0
-      apiStats.value.openai = providerStats['openai'] || 0
       apiStats.value.claude = providerStats['claude'] || 0
     }
 

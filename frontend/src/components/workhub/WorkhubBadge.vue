@@ -1,6 +1,6 @@
 <script setup>
 import { computed } from 'vue'
-import { workhub } from '@/composables/useWorkhub'
+import { workhub, openWorkhub } from '@/composables/useWorkhub'
 
 const props = defineProps({ useCase: { type: Object, required: true } })
 
@@ -11,7 +11,7 @@ const tone = computed(() => (impl.value?.deleted ? 'idle' : impl.value?.blocked 
 </script>
 
 <template>
-  <a v-if="impl && impl.issue_key" class="wh-badge" :class="tone" :href="impl.url || undefined" target="_blank" rel="noopener" :title="[impl.assignee && `Người làm: ${impl.assignee}`, impl.sprint && `Sprint: ${impl.sprint}`, impl.blocked && 'Đang bị chặn', impl.removed && 'Không còn trong đặc tả'].filter(Boolean).join(' · ') || 'Mở trong WorkHub'" @click.stop>
+  <a v-if="impl && impl.issue_key" class="wh-badge" :class="tone" :href="impl.url || undefined" target="_blank" rel="noopener" @click.prevent.stop="impl.url && openWorkhub(impl.url)" :title="[impl.assignee && `Người làm: ${impl.assignee}`, impl.sprint && `Sprint: ${impl.sprint}`, impl.blocked && 'Đang bị chặn', impl.removed && 'Không còn trong đặc tả'].filter(Boolean).join(' · ') || 'Mở trong WorkHub'" @click.stop>
     <b>{{ impl.issue_key }}</b>
     <span>{{ impl.deleted ? 'Đã xoá' : impl.blocked ? 'Bị chặn' : NAMES[impl.status] || impl.status }}</span>
   </a>

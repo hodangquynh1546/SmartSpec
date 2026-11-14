@@ -4,7 +4,7 @@ import { useRoute } from 'vue-router'
 import { useToast } from 'vue-toastification'
 import axiosClient from '@/utils/axiosClient'
 import { socket } from '@/utils/socket'
-import { workhub, fetchUserStatus, loadProject, syncNow, workhubErrorMessage } from '@/composables/useWorkhub'
+import { openWorkhub, workhub, fetchUserStatus, loadProject, syncNow, workhubErrorMessage } from '@/composables/useWorkhub'
 
 const route = useRoute()
 const toast = useToast()
@@ -149,7 +149,7 @@ onBeforeUnmount(() => {
           </div>
           <div class="summary-actions">
             <button class="ghost" type="button" @click="refreshNow"><span class="material-symbols-outlined">sync</span> Đối soát ngay</button>
-            <a v-if="projectState.workhub?.url" class="primary" :href="projectState.workhub.url" target="_blank" rel="noopener">Mở WorkHub <span class="material-symbols-outlined">north_east</span></a>
+            <a v-if="projectState.workhub?.url" class="primary" :href="projectState.workhub.url" target="_blank" rel="noopener" @click.prevent="openWorkhub(projectState.workhub.url)">Mở WorkHub <span class="material-symbols-outlined">north_east</span></a>
           </div>
         </div>
         <div class="bar" role="progressbar" :aria-valuenow="donePercent" aria-valuemin="0" aria-valuemax="100"><i :style="{ width: donePercent + '%' }" /></div>
@@ -169,7 +169,7 @@ onBeforeUnmount(() => {
           <header>{{ col.name }} <span class="count">{{ byStatus(col.id).length }}</span></header>
           <article v-for="i in byStatus(col.id)" :key="i.key" class="card task" :class="{ blocked: i.impl.blocked }">
             <div class="row">
-              <a :href="i.impl.url" target="_blank" rel="noopener" class="key">{{ i.impl.issue_key }}</a>
+              <a :href="i.impl.url" target="_blank" rel="noopener" class="key" @click.prevent="openWorkhub(i.impl.url)">{{ i.impl.issue_key }}</a>
               <span v-if="i.impl.blocked" class="tag bad" :title="i.impl.blocked_reason || ''">Bị chặn</span>
             </div>
             <h3>{{ i.name }}</h3>
@@ -184,7 +184,7 @@ onBeforeUnmount(() => {
               <span v-if="i.impl.sprint" class="tag">{{ i.impl.sprint }}</span>
               <span v-if="i.impl.story_points != null" class="tag">{{ i.impl.story_points }} điểm</span>
               <span v-if="i.impl.due_date" class="tag" :class="{ bad: overdue(i) }">Hạn {{ fmtDate(i.impl.due_date) }}</span>
-              <a v-for="b in openBugs(i)" :key="b.key" class="tag bad" :href="b.url" target="_blank" rel="noopener" :title="b.testcase">🐞 {{ b.key }}</a>
+              <a v-for="b in openBugs(i)" :key="b.key" class="tag bad" :href="b.url" target="_blank" rel="noopener" @click.prevent="openWorkhub(b.url)" :title="b.testcase">🐞 {{ b.key }}</a>
             </div>
             <select :value="i.impl.status" :disabled="busy[i.key]" aria-label="Đổi trạng thái" @change="setStatus(i, $event.target.value)">
               <option v-for="c in COLUMNS" :key="c.id" :value="c.id">{{ c.name }}</option>

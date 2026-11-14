@@ -33,8 +33,9 @@ export function useActiveMembers() {
         }
 
         console.log('🔌 Initializing socket connection for active members...')
+        // Socket đã mở trước khi đăng nhập (hoặc của người khác): mở lại để server xác thực đúng danh tính
+        if (socket.connected && socket.__uid !== localStorage.getItem('userId')) socket.disconnect()
 
-        socket.auth = { userId: currentUserId }
 
         // Remove existing listeners trước khi thêm mới (tránh duplicate)
         socket.off('user_joined', handleUserJoined)

@@ -36,7 +36,7 @@ export class TestcaseExportService {
         const testCases = await this.getTestCasesWithFilters(projectId, versionId, filters);
 
         const workbook = new ExcelJS.Workbook();
-        workbook.creator = 'Test Management System';
+        workbook.creator = 'Hệ thống quản lý kiểm thử';
         workbook.created = new Date();
 
         // === MAIN TEST CASES SHEET ===
@@ -72,7 +72,7 @@ export class TestcaseExportService {
         });
 
         const workbook = new ExcelJS.Workbook();
-        workbook.creator = 'Test Management System';
+        workbook.creator = 'Hệ thống quản lý kiểm thử';
         workbook.created = new Date();
 
         // Get all test cases that are in any sheet
@@ -159,21 +159,21 @@ export class TestcaseExportService {
     // ==================== SHEET CREATION METHODS ====================
 
     private async createMainTestCasesSheet(workbook: ExcelJS.Workbook, testCases: any[]): Promise<void> {
-        const sheet = workbook.addWorksheet('Test Cases Overview');
+        const sheet = workbook.addWorksheet('Tổng quan test case');
 
         sheet.columns = [
             { header: 'ID', key: 'id', width: 12 },
-            { header: 'Title', key: 'title', width: 40 },
-            { header: 'Type', key: 'test_type', width: 15 },
-            { header: 'Priority', key: 'priority', width: 12 },
-            { header: 'Status', key: 'status', width: 15 },
+            { header: 'Tiêu đề', key: 'title', width: 40 },
+            { header: 'Loại', key: 'test_type', width: 15 },
+            { header: 'Độ ưu tiên', key: 'priority', width: 12 },
+            { header: 'Trạng thái', key: 'status', width: 15 },
             { header: 'Requirements', key: 'requirements', width: 20 },
-            { header: 'Database Tables', key: 'database_tables', width: 25 },
-            { header: 'Steps Count', key: 'steps_count', width: 12 },
-            { header: 'Automated', key: 'automated', width: 12 },
-            { header: 'Created By', key: 'created_by', width: 20 },
-            { header: 'Created Date', key: 'created_date', width: 15 },
-            { header: 'Last Executed', key: 'last_executed', width: 15 }
+            { header: 'Bảng dữ liệu', key: 'database_tables', width: 25 },
+            { header: 'Số bước', key: 'steps_count', width: 12 },
+            { header: 'Tự động hoá', key: 'automated', width: 12 },
+            { header: 'Người tạo', key: 'created_by', width: 20 },
+            { header: 'Ngày tạo', key: 'created_date', width: 15 },
+            { header: 'Chạy lần cuối', key: 'last_executed', width: 15 }
         ];
 
         this.applyHeaderStyle(sheet, '4472C4');
@@ -190,8 +190,8 @@ export class TestcaseExportService {
                 steps_count: testCase.steps?.length || 0,
                 automated: testCase.automation?.is_automated ? 'Yes' : 'No',
                 created_by: testCase.created_by?.name || 'N/A',
-                created_date: testCase.created_at ? new Date(testCase.created_at).toLocaleDateString() : '',
-                last_executed: testCase.executed_at ? new Date(testCase.executed_at).toLocaleDateString() : 'Never'
+                created_date: testCase.created_at ? new Date(testCase.created_at).toLocaleDateString('vi-VN') : '',
+                last_executed: testCase.executed_at ? new Date(testCase.executed_at).toLocaleDateString('vi-VN') : 'Chưa bao giờ'
             });
 
             this.applyStatusStyle(row.getCell('status'), testCase.status);
@@ -215,19 +215,19 @@ export class TestcaseExportService {
     }
 
     private async createDetailedSheet(workbook: ExcelJS.Workbook, testCases: any[]): Promise<void> {
-        const sheet = workbook.addWorksheet('Test Case Details');
+        const sheet = workbook.addWorksheet('Chi tiết test case');
 
         sheet.columns = [
-            { header: 'Title', key: 'title', width: 30 },
-            { header: 'Description', key: 'description', width: 40 },
-            { header: 'Test Type', key: 'test_type', width: 15 },
-            { header: 'Objectives', key: 'objectives', width: 30 },
-            { header: 'Preconditions', key: 'preconditions', width: 30 },
-            { header: 'Postconditions', key: 'postconditions', width: 30 },
-            { header: 'Steps', key: 'steps', width: 50 },
-            { header: 'Expected Results', key: 'expected_results', width: 40 },
-            { header: 'Test Data', key: 'test_data', width: 30 },
-            { header: 'Environment', key: 'environment', width: 25 }
+            { header: 'Tiêu đề', key: 'title', width: 30 },
+            { header: 'Mô tả', key: 'description', width: 40 },
+            { header: 'Loại kiểm thử', key: 'test_type', width: 15 },
+            { header: 'Mục tiêu', key: 'objectives', width: 30 },
+            { header: 'Điều kiện tiên quyết', key: 'preconditions', width: 30 },
+            { header: 'Điều kiện sau', key: 'postconditions', width: 30 },
+            { header: 'Các bước', key: 'steps', width: 50 },
+            { header: 'Kết quả mong đợi', key: 'expected_results', width: 40 },
+            { header: 'Dữ liệu kiểm thử', key: 'test_data', width: 30 },
+            { header: 'Môi trường', key: 'environment', width: 25 }
         ];
 
         this.applyHeaderStyle(sheet, '70AD47');
@@ -257,72 +257,72 @@ export class TestcaseExportService {
         versionId?: string,
         testCases?: any[]
     ): Promise<void> {
-        const sheet = workbook.addWorksheet('Summary Report');
+        const sheet = workbook.addWorksheet('Báo cáo tổng hợp');
 
         const stats = await this.calculateBasicStats(testCases || []);
         const dbCoverage = await this.getDatabaseCoverage(projectId, versionId);
         const reqCoverage = await this.getRequirementCoverage(projectId, versionId);
 
         sheet.columns = [
-            { header: 'Category', key: 'category', width: 25 },
-            { header: 'Metric', key: 'metric', width: 30 },
-            { header: 'Value', key: 'value', width: 20 },
-            { header: 'Percentage', key: 'percentage', width: 15 }
+            { header: 'Nhóm', key: 'category', width: 25 },
+            { header: 'Chỉ số', key: 'metric', width: 30 },
+            { header: 'Giá trị', key: 'value', width: 20 },
+            { header: 'Tỷ lệ', key: 'percentage', width: 15 }
         ];
 
         this.applyHeaderStyle(sheet, 'FFC000');
 
         const summaryData = [
             // Test Case Statistics
-            { category: 'Test Cases', metric: 'Total Test Cases', value: stats.total, percentage: '' },
-            { category: 'Test Cases', metric: 'Automated Test Cases', value: stats.automated, percentage: stats.automationRate },
-            { category: 'Test Cases', metric: 'Manual Test Cases', value: stats.manual, percentage: stats.manualRate },
+            { category: 'Test case', metric: 'Tổng số test case', value: stats.total, percentage: '' },
+            { category: 'Test case', metric: 'Test case tự động', value: stats.automated, percentage: stats.automationRate },
+            { category: 'Test case', metric: 'Test case thủ công', value: stats.manual, percentage: stats.manualRate },
 
             // Status Distribution
-            { category: 'Execution Status', metric: 'Passed', value: stats.byStatus.passed, percentage: stats.statusRates.passed },
-            { category: 'Execution Status', metric: 'Failed', value: stats.byStatus.failed, percentage: stats.statusRates.failed },
-            { category: 'Execution Status', metric: 'Blocked', value: stats.byStatus.blocked, percentage: stats.statusRates.blocked },
-            { category: 'Execution Status', metric: 'Not Executed', value: stats.byStatus.not_executed, percentage: stats.statusRates.not_executed },
+            { category: 'Trạng thái thực thi', metric: 'Đạt', value: stats.byStatus.passed, percentage: stats.statusRates.passed },
+            { category: 'Trạng thái thực thi', metric: 'Lỗi', value: stats.byStatus.failed, percentage: stats.statusRates.failed },
+            { category: 'Trạng thái thực thi', metric: 'Bị chặn', value: stats.byStatus.blocked, percentage: stats.statusRates.blocked },
+            { category: 'Trạng thái thực thi', metric: 'Chưa chạy', value: stats.byStatus.not_executed, percentage: stats.statusRates.not_executed },
 
             // Coverage
-            { category: 'Coverage', metric: 'Database Tables Covered', value: dbCoverage.covered_tables, percentage: dbCoverage.coverage_percentage + '%' },
-            { category: 'Coverage', metric: 'Requirements Covered', value: reqCoverage.covered_requirements, percentage: reqCoverage.coverage_percentage + '%' },
+            { category: 'Độ phủ', metric: 'Bảng dữ liệu được phủ', value: dbCoverage.covered_tables, percentage: dbCoverage.coverage_percentage + '%' },
+            { category: 'Độ phủ', metric: 'Requirements Covered', value: reqCoverage.covered_requirements, percentage: reqCoverage.coverage_percentage + '%' },
 
             // Priority Distribution
-            { category: 'Priority', metric: 'Critical', value: stats.byPriority.critical, percentage: stats.priorityRates.critical },
-            { category: 'Priority', metric: 'High', value: stats.byPriority.high, percentage: stats.priorityRates.high },
-            { category: 'Priority', metric: 'Medium', value: stats.byPriority.medium, percentage: stats.priorityRates.medium },
-            { category: 'Priority', metric: 'Low', value: stats.byPriority.low, percentage: stats.priorityRates.low }
+            { category: 'Độ ưu tiên', metric: 'Nghiêm trọng', value: stats.byPriority.critical, percentage: stats.priorityRates.critical },
+            { category: 'Độ ưu tiên', metric: 'Cao', value: stats.byPriority.high, percentage: stats.priorityRates.high },
+            { category: 'Độ ưu tiên', metric: 'Trung bình', value: stats.byPriority.medium, percentage: stats.priorityRates.medium },
+            { category: 'Độ ưu tiên', metric: 'Thấp', value: stats.byPriority.low, percentage: stats.priorityRates.low }
         ];
 
         summaryData.forEach((item, index) => {
             const row = sheet.addRow(item);
 
             // Color coding by category
-            if (item.category === 'Test Cases') {
+            if (item.category === 'Test case') {
                 row.getCell('category').fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'E2EFDA' } };
-            } else if (item.category === 'Execution Status') {
+            } else if (item.category === 'Trạng thái thực thi') {
                 row.getCell('category').fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF2CC' } };
-            } else if (item.category === 'Coverage') {
+            } else if (item.category === 'Độ phủ') {
                 row.getCell('category').fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'DDEBF7' } };
-            } else if (item.category === 'Priority') {
+            } else if (item.category === 'Độ ưu tiên') {
                 row.getCell('category').fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FCE4D6' } };
             }
         });
     }
 
     private async createExecutionHistorySheet(workbook: ExcelJS.Workbook, testCases: any[]): Promise<void> {
-        const sheet = workbook.addWorksheet('Execution History');
+        const sheet = workbook.addWorksheet('Lịch sử chạy');
 
         sheet.columns = [
-            { header: 'Test Case', key: 'test_case', width: 30 },
-            { header: 'Type', key: 'type', width: 15 },
-            { header: 'Last Execution', key: 'last_execution', width: 20 },
-            { header: 'Last Status', key: 'last_status', width: 15 },
-            { header: 'Executed By', key: 'executed_by', width: 20 },
-            { header: 'Duration (ms)', key: 'duration', width: 15 },
-            { header: 'Environment', key: 'environment', width: 20 },
-            { header: 'Execution Count', key: 'execution_count', width: 15 }
+            { header: 'Test case', key: 'test_case', width: 30 },
+            { header: 'Loại', key: 'type', width: 15 },
+            { header: 'Lần chạy gần nhất', key: 'last_execution', width: 20 },
+            { header: 'Trạng thái gần nhất', key: 'last_status', width: 15 },
+            { header: 'Người chạy', key: 'executed_by', width: 20 },
+            { header: 'Thời lượng (ms)', key: 'duration', width: 15 },
+            { header: 'Môi trường', key: 'environment', width: 20 },
+            { header: 'Số lần chạy', key: 'execution_count', width: 15 }
         ];
 
         this.applyHeaderStyle(sheet, '7030A0');
@@ -334,8 +334,8 @@ export class TestcaseExportService {
             const row = sheet.addRow({
                 test_case: testCase.title,
                 type: testCase.test_type,
-                last_execution: lastExecution?.executed_at ? new Date(lastExecution.executed_at).toLocaleString() : 'Never',
-                last_status: lastExecution?.result || 'Not Executed',
+                last_execution: lastExecution?.executed_at ? new Date(lastExecution.executed_at).toLocaleString('vi-VN') : 'Chưa bao giờ',
+                last_status: lastExecution?.result || 'Chưa chạy',
                 executed_by: lastExecution?.executed_by?.name || 'N/A',
                 duration: lastExecution?.duration_ms || 'N/A',
                 environment: lastExecution?.environment_snapshot?.runtime_env || 'N/A',
@@ -679,22 +679,22 @@ export class TestcaseExportService {
         // Field mapping
         const fieldMap: { [key: string]: { header: string; width: number; getValue: (tc: any) => any } } = {
             'test_case_id': {
-                header: 'Test Case ID',
+                header: 'Mã test case',
                 width: 15,
                 getValue: (tc) => String(tc._id || '')
             },
             'test_case_name': {
-                header: 'Test Case Name/Title',
+                header: 'Tên/Tiêu đề test case',
                 width: 40,
                 getValue: (tc) => tc.title || ''
             },
             'description': {
-                header: 'Description',
+                header: 'Mô tả',
                 width: 50,
                 getValue: (tc) => tc.description || ''
             },
             'module_feature': {
-                header: 'Module/Feature',
+                header: 'Phân hệ/Tính năng',
                 width: 30,
                 getValue: (tc) => {
                     // Get usecase names from requirement IDs
@@ -705,12 +705,12 @@ export class TestcaseExportService {
                 }
             },
             'test_priority': {
-                header: 'Test Priority',
+                header: 'Độ ưu tiên kiểm thử',
                 width: 15,
                 getValue: (tc) => this.formatEnumValue(tc.priority) || ''
             },
             'preconditions': {
-                header: 'Preconditions',
+                header: 'Điều kiện tiên quyết',
                 width: 40,
                 getValue: (tc) => {
                     if (Array.isArray(tc.preconditions)) {
@@ -720,12 +720,12 @@ export class TestcaseExportService {
                 }
             },
             'test_data': {
-                header: 'Test Data',
+                header: 'Dữ liệu kiểm thử',
                 width: 50,
                 getValue: (tc) => {
                     if (Array.isArray(tc.test_data) && tc.test_data.length > 0) {
                         return tc.test_data.map((td: any) => {
-                            const name = td.name || 'Unnamed';
+                            const name = td.name || 'Chưa đặt tên';
                             const input = JSON.stringify(td.input_payload || {});
                             return `${name}: ${input}`;
                         }).join(' | ');
@@ -734,7 +734,7 @@ export class TestcaseExportService {
                 }
             },
             'test_steps': {
-                header: 'Test Steps',
+                header: 'Các bước kiểm thử',
                 width: 60,
                 getValue: (tc) => {
                     if (Array.isArray(tc.steps) && tc.steps.length > 0) {
@@ -753,7 +753,7 @@ export class TestcaseExportService {
                 }
             },
             'expected_result': {
-                header: 'Expected Result',
+                header: 'Kết quả mong đợi',
                 width: 50,
                 getValue: (tc) => {
                     if (tc.expected_results) {
@@ -776,7 +776,7 @@ export class TestcaseExportService {
                 }
             },
             'actual_result': {
-                header: 'Actual Result',
+                header: 'Kết quả thực tế',
                 width: 50,
                 getValue: (tc) => {
                     if (tc.execution_logs && Array.isArray(tc.execution_logs) && tc.execution_logs.length > 0) {
@@ -792,7 +792,7 @@ export class TestcaseExportService {
                 }
             },
             'status': {
-                header: 'Status',
+                header: 'Trạng thái',
                 width: 15,
                 getValue: (tc) => this.formatEnumValue(tc.status) || ''
             }
@@ -810,8 +810,8 @@ export class TestcaseExportService {
         if (columns.length === 0) {
             logger.warn('No valid fields selected, using default fields');
             columns.push(
-                { header: 'Test Case ID', key: 'test_case_id', width: 15 },
-                { header: 'Test Case Name/Title', key: 'test_case_name', width: 40 }
+                { header: 'Mã test case', key: 'test_case_id', width: 15 },
+                { header: 'Tên/Tiêu đề test case', key: 'test_case_name', width: 40 }
             );
         }
 
@@ -870,7 +870,7 @@ export class TestcaseExportService {
         workbook: ExcelJS.Workbook,
         testCases: any[]
     ): Promise<void> {
-        const sheet = workbook.addWorksheet('Status Summary');
+        const sheet = workbook.addWorksheet('Tổng hợp trạng thái');
 
         // Calculate statistics
         const statusCounts: { [key: string]: number } = {};
@@ -881,7 +881,7 @@ export class TestcaseExportService {
 
         // Define columns
         sheet.columns = [
-            { header: 'Status', key: 'status', width: 20 },
+            { header: 'Trạng thái', key: 'status', width: 20 },
             { header: 'Task(số lượng fail/pass)', key: 'count', width: 30 }
         ];
 

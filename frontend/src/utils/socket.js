@@ -2,9 +2,11 @@ import { io } from "socket.io-client";
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:8000";
 
+// Danh tính do server xác định từ access token (đọc lại mỗi lần kết nối/kết nối lại, nên luôn là token mới nhất).
 export const socket = io(BACKEND_URL, {
   transports: ["websocket"],
   reconnection: true,
+  auth: (cb) => { socket.__uid = localStorage.getItem("userId"); cb({ token: localStorage.getItem("accessToken") }) },
 });
 
 export function initSocketConnection() {

@@ -98,7 +98,7 @@ export class ProjectService {
             description: newProject.description,
             language: newProject.language,
           },
-          message: `Project "${newProject.name}" created by user ${owner.name}`,
+          message: `${owner.name} đã tạo dự án "${newProject.name}"`,
         },
         level: "info",
       });
@@ -180,7 +180,7 @@ export class ProjectService {
       action: "update_project",
       target_id: projectId,
       target_type: "project",
-      details: { before, after, message: `${user.name} updated project ${project.name}` },
+      details: { before, after, message: `${user.name} đã cập nhật dự án ${project.name}` },
       level: "info",
     });
 
@@ -225,7 +225,7 @@ export class ProjectService {
         action: "delete_project",
         target_id: projectId,
         target_type: "project",
-        details: { message: `${user.name} deleted project ${project.name}` },
+        details: { message: `${user.name} đã xoá dự án ${project.name}` },
         level: "info",
       });
 
@@ -276,7 +276,7 @@ export class ProjectService {
       action: "restore_project",
       target_id: projectId,
       target_type: "project",
-      details: { message: `${user.name} restored project ${project.name}` },
+      details: { message: `${user.name} đã khôi phục dự án ${project.name}` },
       level: "info",
     });
 

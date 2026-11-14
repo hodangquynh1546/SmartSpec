@@ -733,7 +733,7 @@ export class VersionService {
               version_minor: newVersion.version_minor,
               parent_version_id: baseVersionId
             },
-            message: `${username} created new version ${newVersion.version_number} from version ${baseVersion.version_number}`
+            message: `${username} đã tạo phiên bản ${newVersion.version_number} từ phiên bản ${baseVersion.version_number}`
           }
         });
       } catch (logError) {
@@ -913,7 +913,7 @@ export class VersionService {
               version_major: version.version_major,
               version_minor: version.version_minor
             },
-            message: `${username} deleted version ${version.version_number}`
+            message: `${username} đã xoá phiên bản ${version.version_number}`
           }
         });
       } catch (logError) {

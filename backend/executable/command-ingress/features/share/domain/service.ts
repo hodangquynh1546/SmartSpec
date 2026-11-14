@@ -105,7 +105,7 @@ export class ShareProjectService {
           target_id: existingMember.user_id.toString(),
           target_type: "member",
           level: "info",
-          details: { message: `${sender.name} re-invited ${user.name} as ${role}` }
+          details: { message: `${sender.name} đã mời lại ${user.name} với vai trò ${role}` }
         });
 
         const mailIsSent = await this.sendInviteEmail(
@@ -171,7 +171,7 @@ export class ShareProjectService {
           target_id: existingMember.user_id.toString(),
           target_type: "member",
           level: "info",
-          details: { message: `${sender.name} re-invited ${user.name} as ${role}` }
+          details: { message: `${sender.name} đã mời lại ${user.name} với vai trò ${role}` }
         });
 
         const mailIsSent = await this.sendInviteEmail(
@@ -243,7 +243,7 @@ export class ShareProjectService {
         target_id: userId.toString(),
         target_type: "member",
         level: "info",
-        details: { message: `${sender.name} invited ${user.name} as ${role}` }
+        details: { message: `${sender.name} đã mời ${user.name} với vai trò ${role}` }
       });
 
       const mailIsSent = await this.sendInviteEmail(
@@ -562,7 +562,7 @@ export class ShareProjectService {
       target_id: member.user_id.toString(),
       target_type: "member",
       level: "info",
-      details: { message: `User ${recipient.name} (${recipient.email}) accepted invitation to project ${project.name}` }
+      details: { message: `${recipient.name} (${recipient.email}) đã chấp nhận lời mời vào dự án ${project.name}` }
     });
 
     if (!sender) {
@@ -685,7 +685,7 @@ export class ShareProjectService {
       target_id: member.user_id.toString(),
       target_type: "member",
       level: "info",
-      details: { message: `User ${recipient.name} (${recipient.email}) rejected invitation to project ${project.name}` }
+      details: { message: `${recipient.name} (${recipient.email}) đã từ chối lời mời vào dự án ${project.name}` }
     });
 
     if (!sender) {
@@ -793,7 +793,7 @@ export class ShareProjectService {
       target_id: member.user_id.toString(),
       target_type: "member",
       level: "info",
-      details: { message: `User ${sender.name} (${sender.email}) canceled invitation for ${recipient.name} (${recipient.email}) in project ${project.name}` }
+      details: { message: `${sender.name} (${sender.email}) đã huỷ lời mời ${recipient.name} (${recipient.email}) vào dự án ${project.name}` }
     });
     return new ServiceResponse<any>(
       ResponseStatus.Success,
@@ -880,7 +880,7 @@ export class ShareProjectService {
         target_type: "member",
         target_id: memberId,
         level: "info",
-        details: { message: `User ${sender.name} (${sender.email}) removed member ${recipient.name} (${recipient.email}) from project ${project.name}` }
+        details: { message: `${sender.name} (${sender.email}) đã gỡ ${recipient.name} (${recipient.email}) khỏi dự án ${project.name}` }
       });
 
       if (!sender) {
@@ -990,7 +990,7 @@ export class ShareProjectService {
         target_id: userId,
         target_type: "member",
         level: "info",
-        details: { message: `User ${recipient.name} (${recipient.email}) left the project ${project.name}` }
+        details: { message: `${recipient.name} (${recipient.email}) đã rời dự án ${project.name}` }
       });
 
       if (!sender) {

@@ -97,7 +97,7 @@ export class AuthServiceImpl implements AuthService {
         target_id: user._id.toString(),
         action: "create_user",
         target_type: "system",
-        details: { message: `New Google user created: ${user.email}` },
+        details: { message: `Đã tạo tài khoản từ Google: ${user.email}` },
         level: "info",
       });
     }
@@ -134,7 +134,7 @@ export class AuthServiceImpl implements AuthService {
       target_id: user._id.toString(),
       action: "login",
       target_type: "system",
-      details: { message: `Google login success for ${user.email}` },
+      details: { message: `Đăng nhập Google thành công: ${user.email}` },
       level: "info",
       ip: ip,
       user_agent: userAgent
@@ -157,7 +157,7 @@ export class AuthServiceImpl implements AuthService {
       target_id: sub?.toString(),
       action: "logout",
       target_type: "system",
-      details: { message: ` User "${sub}" logged out successfully (Session ID: ${sid}).` },
+      details: { message: `Người dùng "${sub}" đã đăng xuất (phiên ${sid}).` },
       level: "info",
       ip: ip,
       user_agent: userAgent
@@ -279,7 +279,7 @@ export class AuthServiceImpl implements AuthService {
 
     await this.logService.createLog({
       user_id: user._id.toString(), target_id: user._id.toString(), action: "create_user", target_type: "system",
-      details: { message: `User "${normalized}" registered (ID: ${user._id}).` }, level: "info", ip, user_agent: userAgent,
+      details: { message: `Người dùng "${normalized}" đã đăng ký (ID: ${user._id}).` }, level: "info", ip, user_agent: userAgent,
     });
     if (!user.email_verified) this.sendVerificationEmail(String(user._id)).catch(() => undefined);
     await this.linkWorkhub(user, password, peer.status !== "ok");
@@ -312,7 +312,7 @@ export class AuthServiceImpl implements AuthService {
         if (!user) {
           user = await new User({ email: normalized, password: hash, name: peer.name || normalized.split("@")[0], email_verified: !!peer.emailVerified, password_changed_at: peerChanged ?? new Date() }).save();
           await this.logService.createLog({ user_id: user._id.toString(), target_id: user._id.toString(), action: "create_user", target_type: "system",
-            details: { message: `User "${normalized}" created from the WorkHub account on first sign-in.` }, level: "info", ip, user_agent: userAgent });
+            details: { message: `Tài khoản "${normalized}" được tạo từ tài khoản WorkHub ở lần đăng nhập đầu tiên.` }, level: "info", ip, user_agent: userAgent });
         } else {
           user.password = hash;
           user.password_changed_at = peerChanged ?? new Date();
@@ -324,7 +324,7 @@ export class AuthServiceImpl implements AuthService {
     }
     if (!user || !ok) {
       await this.logService.createLog({ user_id: user ? user._id.toString() : undefined, target_id: undefined, action: "failed_login", target_type: "system",
-        details: { message: `Failed login attempt for "${normalized}"` }, level: "warning", ip, user_agent: userAgent });
+        details: { message: `Đăng nhập thất bại với "${normalized}"` }, level: "warning", ip, user_agent: userAgent });
       // one message for "no such account" and "wrong password": do not reveal which e-mails exist
       throw new AuthError(401, "INVALID_CREDENTIALS", "Email hoặc mật khẩu không đúng");
     }
@@ -351,7 +351,7 @@ export class AuthServiceImpl implements AuthService {
       const token = this.signEmailToken(user.email, "reset", "1h");
       const link = `${env.CLIENT_URL}/reset-password?token=${token}`;
       await this.logService.createLog({ user_id: user._id.toString(), target_id: user._id.toString(), action: "update_user", target_type: "system",
-        details: { message: `Password reset requested by "${user.email}".` }, level: "info", ip, user_agent: userAgent });
+        details: { message: `"${user.email}" đã yêu cầu đặt lại mật khẩu.` }, level: "info", ip, user_agent: userAgent });
       const sent = await this.sendmail(user.email, "Đặt lại mật khẩu SmartSpec",
         `<p>Nhấn vào liên kết sau để đặt lại mật khẩu (có hiệu lực 1 giờ):</p><p><a href="${link}">${link}</a></p><p>Nếu bạn không yêu cầu, hãy bỏ qua email này.</p>`);
       if (!sent) logger.warn(`Could not send the password reset e-mail to ${user.email}`);
@@ -371,7 +371,7 @@ export class AuthServiceImpl implements AuthService {
     await Session.deleteMany({ userID: user._id }); // sign out everywhere, like WorkHub
     await workhubIdentity.setPassword(user.email, newPassword); // the same account in WorkHub gets the new password now
     await this.logService.createLog({ user_id: user._id.toString(), target_id: user._id.toString(), action: "update_user", target_type: "system",
-      details: { message: `User "${user.email}" reset the password.` }, level: "info", ip, user_agent: userAgent });
+      details: { message: `"${user.email}" đã đặt lại mật khẩu.` }, level: "info", ip, user_agent: userAgent });
     return "Đặt lại mật khẩu thành công";
   }
 
@@ -438,7 +438,7 @@ export class AuthServiceImpl implements AuthService {
       target_id: user._id.toString(),
       action: "login",
       target_type: "system",
-      details: { message: `2FA login success for ${email}` },
+      details: { message: `Đăng nhập 2FA thành công: ${email}` },
       level: "info",
       ip: ip,
       user_agent: userAgent
@@ -492,7 +492,7 @@ export class AuthServiceImpl implements AuthService {
         details: {
           before: { isTwoFactorEnabled: oldValue },
           after: { isTwoFactorEnabled: enable },
-          message: `User "${user.email}" ${enable ? "enabled" : "disabled"} Two-Factor Authentication (2FA).`
+          message: `"${user.email}" đã ${enable ? "bật" : "tắt"} xác thực hai lớp (2FA).`
         },
         level: "info",
         ip: ip,

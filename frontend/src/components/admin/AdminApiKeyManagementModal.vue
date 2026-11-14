@@ -30,8 +30,6 @@
             <label>Nhà cung cấp:</label>
             <select v-model="filters.provider" class="filter-select">
               <option value="all">Tất cả</option>
-              <option value="gemini">Gemini</option>
-              <option value="openai">OpenAI</option>
               <option value="claude">Claude</option>
             </select>
           </div>

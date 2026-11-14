@@ -1,3 +1,4 @@
+import { attachProjectHooks } from "../hooks/design-changed";
 import { InferSchemaType, model, Schema } from "mongoose";
 
 // Định nghĩa schema lịch sử thành viên
@@ -116,4 +117,5 @@ const projectSchema = new Schema({
 
 // Kiểu dữ liệu cho project
 type ProjectSchemaInferType = InferSchemaType<typeof projectSchema>;
+attachProjectHooks(projectSchema); // tạo/đổi tên/đổi thành viên → đồng bộ WorkHub ngay
 export default model<ProjectSchemaInferType>("projects", projectSchema);

@@ -6,7 +6,6 @@
         <div class="modal-header">
           <div class="header-text">
             <h2>Tạo dự án mới</h2>
-            <p class="progress-indicator">Bước {{ currentStep }} of 3</p>
           </div>
           <button class="close-btn" @click="handleClose">&times;</button>
         </div>
@@ -47,112 +46,10 @@
               </div>
             </div>
 
-            <!-- Step 2 -->
-            <div v-if="currentStep === 2">
-              <!-- Thông báo yêu cầu đầu vào -->
-              <div class="input-requirement" v-if="!isStep2Valid">
-                <span class="material-symbols-outlined" style="font-size: 16px; color: #ef4444"
-                  >info</span
-                >
-                Vui lòng nhập mô tả tính năng hoặc đính kèm ít nhất một tệp để tiếp tục.
-              </div>
-              <div class="form-group">
-                <label for="rawText">Mô tả tính năng (không bắt buộc)</label>
-                <textarea
-                  id="rawText"
-                  v-model="projectData.rawText"
-                  placeholder="Dán yêu cầu, user story hoặc nội dung bất kỳ tại đây..."
-                  rows="5"
-                ></textarea>
-              </div>
-              <div class="form-group">
-                <label>Tệp đính kèm (không bắt buộc)</label>
-                <div class="file-info">
-                  <span class="file-count">{{ selectedFiles.length }} tệp đã chọn</span>
-                  <span class="file-size">Tổng dung lượng: {{ formatFileSize(totalFileSize) }}</span>
-                </div>
-                <div class="attachment-trigger" @click="$refs.fileInput.click()">
-                  <span class="material-symbols-outlined">upload_file</span>
-                  Bấm để chọn tệp...
-                </div>
-                <input
-                  type="file"
-                  ref="fileInput"
-                  class="hidden-input"
-                  multiple
-                  @change="handleFileChange"
-                />
-                <div v-if="selectedFiles.length > 0" class="file-list-container">
-                  <div class="file-list-scroll">
-                    <div v-for="(file, idx) in selectedFiles" :key="file.id" class="file-item">
-                      <div class="file-preview" v-if="isImageFile(file)">
-                        <img :src="file.previewUrl" :alt="file.name" />
-                      </div>
-                      <div v-else class="file-icon">
-                        <span class="material-symbols-outlined">description</span>
-                      </div>
-                      <span class="file-name">{{ file.name }}</span>
-                      <span class="file-size-small">{{ formatFileSize(file.size) }}</span>
-                      <button type="button" class="remove-file-btn" @click="removeFile(idx)">
-                        &times;
-                      </button>
-                    </div>
-                  </div>
-                </div>
-                <div v-if="sizeLimitExceeded" class="error-message">
-                  Tổng dung lượng tệp vượt giới hạn 150KB. Vui lòng bỏ bớt tệp.
-                </div>
-              </div>
-            </div>
-
-            <!-- Step 3 -->
-            <div v-if="currentStep === 3">
-              <div class="form-group">
-                <label>Chọn ngôn ngữ</label>
-                <p class="lang-description">Chọn ngôn ngữ chính cho tài liệu.</p>
-                <div class="language-selector">
-                  <div
-                    class="lang-option"
-                    :class="{ selected: projectData.language === 'vi-VN' }"
-                    @click="projectData.language = 'vi-VN'"
-                  >
-                    <img src="https://flagcdn.com/w40/vn.png" alt="Cờ Việt Nam" />
-                    <span>Tiếng Việt</span>
-                  </div>
-                  <div
-                    class="lang-option"
-                    :class="{ selected: projectData.language === 'en-US' }"
-                    @click="projectData.language = 'en-US'"
-                  >
-                    <img src="https://flagcdn.com/w40/us.png" alt="Cờ Mỹ" />
-                    <span>Tiếng Anh</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
             <!-- Footer -->
             <div class="modal-footer">
-              <button type="button" class="cancel-btn" v-if="currentStep > 1" @click="prevStep">
-                Quay lại
-              </button>
-              <button
-                type="button"
-                class="create-btn"
-                v-if="currentStep < 3"
-                @click="nextStep"
-                :disabled="isNextButtonDisabled"
-              >
-                Tiếp
-              </button>
-              <button
-                type="submit"
-                class="create-btn"
-                v-if="currentStep === 3"
-                :disabled="sizeLimitExceeded"
-              >
-                Tạo dự án
-              </button>
+              <button type="button" class="cancel-btn" @click="handleClose">Huỷ</button>
+              <button type="submit" class="create-btn" :disabled="isNextButtonDisabled">Tạo dự án</button>
             </div>
           </form>
         </div>
@@ -273,14 +170,9 @@ export default {
     })
 
     // Computed property để kiểm tra nút Next có bị disable không
-    const isNextButtonDisabled = computed(() => {
-      if (currentStep.value === 1) {
-        return !projectData.value.name.trim() || !projectData.value.description.trim()
-      } else if (currentStep.value === 2) {
-        return sizeLimitExceeded.value || !isStep2Valid.value
-      }
-      return false
-    })
+    const isNextButtonDisabled = computed(
+      () => !projectData.value.name.trim() || !projectData.value.description.trim(),
+    )
 
     const validateStep1 = () => {
       const errors = { name: '', description: '' }
@@ -583,36 +475,23 @@ export default {
     }
 
     const handleCreateProject = async () => {
-      if (sizeLimitExceeded.value) {
-        alert('Vui lòng giảm tổng dung lượng tệp dưới 20000KB trước khi tạo dự án.')
-        return
-      }
-
       creationStatus.value = 'creating'
-      processingProgress.value = 0
-      currentStage.value = 'Initializing...'
       startLoadingMessages()
 
+      // Chỉ cần tên và mô tả; mô tả tính năng / tệp đầu vào thêm sau, ngay trong dự án.
       const formData = new FormData()
-      formData.append('name', projectData.value.name)
-      formData.append('description', projectData.value.description)
+      formData.append('name', projectData.value.name.trim())
+      formData.append('description', projectData.value.description.trim())
       formData.append('language', projectData.value.language)
-      if (projectData.value.rawText) formData.append('rawText', projectData.value.rawText)
-
-      selectedFiles.value.forEach((fileObj) => {
-        formData.append('files', fileObj.file)
-      })
 
       try {
         const response = await createProject(formData)
         const createdProject = response.data.data
-        // QUAN TRỌNG: Lưu lại toàn bộ object dự án vừa tạo
         finalProjectData.value = createdProject
-        // QUAN TRỌNG: Lưu versionId ngay lập tức
         currentVersionId.value = createdProject.current_version
-
-        creationStatus.value = 'polling'
-        startPolling(createdProject._id, createdProject.current_version)
+        stopLoadingMessages()
+        emit('project-created', { _id: createdProject._id, current_version: { _id: createdProject.current_version } })
+        goToEditor()
       } catch (error) {
         creationStatus.value = 'failed'
         processingError.value = error.response?.data?.message || 'Tạo dự án thất bại!'

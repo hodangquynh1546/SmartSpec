@@ -55,6 +55,24 @@ function listen() {
   socket.on('workhub_event', onEvent)
 }
 
+/**
+ * Mở WorkHub đã đăng nhập đúng tài khoản này (vé đăng nhập một lần), thay vì mở thẳng liên kết: trình duyệt có thể
+ * đang giữ phiên WorkHub của tài khoản khác và sẽ báo "không tìm thấy dự án".
+ */
+export async function openWorkhub(url) {
+  const tab = window.open('', '_blank') // mở tab ngay trong lúc bấm để không bị chặn popup
+  try {
+    let next = '/workspaces'
+    if (url) { const u = new URL(url, window.location.origin); next = u.pathname + u.search }
+    const { data } = await axiosClient.post('/api/workhub/sso', { next })
+    if (tab) tab.location.href = data.data.url
+    else window.location.href = data.data.url
+  } catch (e) {
+    if (tab) tab.close()
+    throw e
+  }
+}
+
 export async function fetchUserStatus() {
   listen()
   try {

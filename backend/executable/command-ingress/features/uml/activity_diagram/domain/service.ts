@@ -248,7 +248,7 @@ export class ActivityDiagramService {
             performed_by_ai: true,
             details: {
               after: { name: newDiagram.name, actor: actor },
-              message: `${username} generated activity diagram "${newDiagram.name}" from actor "${actor}"`
+              message: `${username} đã sinh sơ đồ hoạt động "${newDiagram.name}" từ tác nhân "${actor}"`
             }
           });
         }
@@ -338,7 +338,7 @@ export class ActivityDiagramService {
             performed_by_ai: false,
             details: {
               after: { name: newDiagram.name },
-              message: `${username} created activity diagram "${newDiagram.name}"`
+              message: `${username} đã tạo sơ đồ hoạt động "${newDiagram.name}"`
             }
           });
         }
@@ -510,7 +510,7 @@ export class ActivityDiagramService {
               level: "warning",
               details: {
                 before: diagram,
-                message: `${username} deleted activity diagram "${diagram.name}"`
+                message: `${username} đã xoá sơ đồ hoạt động "${diagram.name}"`
               }
             });
           }

@@ -1,6 +1,11 @@
 import logger from "../../lib/logger";
 // socket.ts
 import { Server } from 'socket.io';
+import jwt from 'jsonwebtoken';
+import mongoose from 'mongoose';
+import Project from '../../internal/model/project';
+import User from '../../internal/model/user';
+import Session from '../../internal/model/session';
 import { Server as HttpServer } from 'http';
 import { usecaseSocketService } from '../command-ingress/features/usecase/domain/usecase.socket.service';
 import { inputSocketService } from '../command-ingress/features/input/domain/input.socket.service';
@@ -17,9 +22,25 @@ export function initSocket(server: HttpServer) {
     // Track projects for each socket for auto cleanup
     const socketProjects = new Map<string, Set<string>>();
 
+    // Danh tính của socket do SERVER xác định từ JWT (trước đây tin userId do client tự khai → ai cũng vào được phòng của mọi dự án).
+    // Chấp nhận token đã hết hạn nếu phiên (sid) còn sống: kết nối lại sau khi idle không nên mất realtime.
+    io.use(async (socket, next) => {
+        try {
+            const token = socket.handshake.auth?.token;
+            if (token) {
+                const claims: any = jwt.verify(String(token), process.env.JWT_SECRET || 'default', { ignoreExpiration: true });
+                const alive = claims?.sid ? await Session.exists({ sessionID: claims.sid, userID: claims._id }) : null;
+                const user: any = alive ? await User.findById(claims._id).select('status').lean() : null;
+                if (user && user.status !== 'INACTIVE') { socket.data.userId = String(claims._id); socket.data.role = claims.system_role; }
+            }
+        } catch { /* không có danh tính: vẫn kết nối được nhưng không vào được phòng nào */ }
+        next();
+    });
+
     io.on('connection', (socket) => {
         //logger.info(`✅ User connected: ${socket.id}, userId: ${socket.handshake.auth.userId}`);
         socket.on('join_system_logs', () => {
+            if (socket.data.role !== 'ADMIN') return; // nhật ký toàn hệ thống: chỉ quản trị viên
             //logger.info(`🧩 User ${socket.id} joined global system log room`);
             logSocketService.joinSystemRoom(socket);
         });
@@ -27,19 +48,19 @@ export function initSocket(server: HttpServer) {
         socketProjects.set(socket.id, new Set<string>());
 
         // Join notification room (existing)
-        socket.on('notification', (data) => {
-            const userId = typeof data === "string" ? data : data.room?.replace("user_", "");
-            socket.join(`user_${userId}`);
+        socket.on('notification', () => {
+            if (socket.data.userId) socket.join(`user_${socket.data.userId}`); // chỉ phòng của chính mình
         });
 
         // ✅ Join project room for realtime collaboration
         socket.on('join_project', async (projectId: string) => {
-            const userId = socket.handshake.auth.userId;
-
-            if (!userId) {
-                logger.warn('⚠️ No userId in socket auth');
-                return;
-            }
+            const userId = socket.data.userId;
+            if (!userId || !mongoose.isValidObjectId(projectId)) return;
+            const member = await Project.exists({
+                _id: projectId,
+                $or: [{ owner_id: userId }, { members: { $elemMatch: { user_id: userId, status: 'accepted' } } }],
+            });
+            if (!member) { socket.emit('join_denied', { projectId }); return; } // không phải thành viên: không nhận sự kiện nào
 
             //logger.info(`🎯 User ${userId} joining project ${projectId}`);
 
@@ -71,7 +92,7 @@ export function initSocket(server: HttpServer) {
 
         // ✅ Leave project room
         socket.on('leave_project', async (projectId: string) => {
-            const userId = socket.handshake.auth.userId;
+            const userId = socket.data.userId;
             //logger.info(`🚪 User ${userId} leaving project ${projectId}`);
 
             // Remove from tracking

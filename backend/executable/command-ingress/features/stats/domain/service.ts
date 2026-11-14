@@ -199,15 +199,11 @@ export class StatsService {
       const stats = await ApiUsage.aggregate(pipeline);
 
       return stats.length > 0 ? stats : [
-        { provider: 'Gemini', requests: 0, tokens: 0, success: 0, failed: 0 },
-        { provider: 'OpenAI', requests: 0, tokens: 0, success: 0, failed: 0 },
         { provider: 'Claude', requests: 0, tokens: 0, success: 0, failed: 0 },
       ];
     } catch (error) {
       logger.error('Error fetching provider usage:', error);
       return [
-        { provider: 'Gemini', requests: 0, tokens: 0, success: 0, failed: 0 },
-        { provider: 'OpenAI', requests: 0, tokens: 0, success: 0, failed: 0 },
         { provider: 'Claude', requests: 0, tokens: 0, success: 0, failed: 0 },
       ];
     }

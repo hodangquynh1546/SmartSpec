@@ -342,7 +342,7 @@ export class UsecaseService {
         level: "info",
         details: {
           after: newUsecase,
-          message: `${userId} created usecases ${newUsecase.map(uc => uc.name).join(', ')} in version ${version.version_number}`
+          message: `${userId} đã tạo use case ${newUsecase.map(uc => uc.name).join(', ')} ở phiên bản ${version.version_number}`
         },
         performed_by_ai: true
       });
@@ -513,7 +513,7 @@ export class UsecaseService {
         details: {
           before: originalUsecase.toObject(),
           after: updatedUsecase.toObject(),
-          message: `${userId} updated usecase ${originalUsecase.name} in version ${version.version_number}`
+          message: `${userId} đã cập nhật use case ${originalUsecase.name} ở phiên bản ${version.version_number}`
         }
       });
 
@@ -629,7 +629,7 @@ export class UsecaseService {
         level: "warning",
         details: {
           before: deletedUsecase.toObject(),
-          message: `${userId} deleted usecase ${deletedUsecase.name} from version ${version.version_number}`
+          message: `${userId} đã xoá use case ${deletedUsecase.name} khỏi phiên bản ${version.version_number}`
         }
       });
 

@@ -39,32 +39,9 @@
               <div class="form-group">
                 <label>Nhà cung cấp *</label>
                 <select v-model="formData.provider" class="form-input">
-                  <option value="">Chọn nhà cung cấp</option>
-                  <optgroup label="Chính thức">
-                    <option value="gemini">Google Gemini</option>
-                    <option value="openai">OpenAI</option>
-                    <option value="claude">Anthropic Claude</option>
-                  </optgroup>
-                  <optgroup label="OpenRouter (Hỗ trợ nhiều model)">
-                    <option value="openrouter">OpenRouter (đa năng)</option>
-                  </optgroup>
-                  <optgroup label="Mô hình mã nguồn mở">
-                    <option value="nous">Nous</option>
-                    <option value="qwen">Qwen</option>
-                    <option value="deepseek">DeepSeek</option>
-                    <option value="mistral">Mistral</option>
-                    <option value="meta">Meta (Llama)</option>
-                    <option value="allenai">AllenAI (Olmo)</option>
-                    <option value="google">Google (Gemma)</option>
-                    <option value="nvidia">NVIDIA (Nemotron)</option>
-                    <option value="kwaipilot">Kwaipilot</option>
-                    <option value="amazon">Amazon (Nova)</option>
-                  </optgroup>
+                  <option value="claude">Anthropic Claude</option>
                 </select>
                 <span class="error-message" v-if="errors.provider">{{ errors.provider }}</span>
-                <span class="help-text" v-if="formData.provider === 'openrouter'">
-                  💡 OpenRouter cho phép sử dụng 1 key để truy cập nhiều model khác nhau
-                </span>
               </div>
 
               <div class="form-group">
@@ -238,7 +215,7 @@ const showKey = ref(false)
 
 const formData = reactive({
   key_value: '',
-  provider: '',
+  provider: 'claude',
   display_name: '',
   is_active: true,
   daily_limit: 1000,
@@ -258,7 +235,7 @@ const formData = reactive({
 
 const errors = reactive({
   key_value: '',
-  provider: '',
+  provider: 'claude',
 })
 
 const minExpiryDate = computed(() => {

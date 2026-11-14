@@ -129,7 +129,7 @@ export class UsecaseDiagramServiceImpl implements UseCaseDiagramService {
             performed_by_ai: true,
             details: {
               after: { name: savedDocument.name, requirement_count: requirements.length },
-              message: `${username} generated usecase diagram "${savedDocument.name}" from ${requirements.length} requirement(s)`
+              message: `${username} đã sinh sơ đồ use case "${savedDocument.name}" từ ${requirements.length} yêu cầu`
             }
           });
         }
@@ -708,7 +708,7 @@ export class UsecaseDiagramServiceImpl implements UseCaseDiagramService {
             level: "warning",
             details: {
               before: beforeSnapshot,
-              message: `${username} deleted usecase diagram "${ucd.name}"`
+              message: `${username} đã xoá sơ đồ use case "${ucd.name}"`
             }
           });
         }

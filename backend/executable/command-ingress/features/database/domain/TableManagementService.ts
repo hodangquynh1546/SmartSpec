@@ -94,7 +94,7 @@ export class TableManagementService {
             level: "info",
             details: {
                 after: tableData,
-                message: `${username} added table ${tableData.name}`
+                message: `${username} đã thêm bảng ${tableData.name}`
             }
         });
 
@@ -210,7 +210,7 @@ export class TableManagementService {
             details: {
                 before: existingTable,
                 after: updatedTableData,
-                message: `${username} updated table ${tableName}`
+                message: `${username} đã cập nhật bảng ${tableName}`
             }
         });
 

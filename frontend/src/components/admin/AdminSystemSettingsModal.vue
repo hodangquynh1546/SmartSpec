@@ -212,8 +212,6 @@
                   <div class="form-group">
                     <label>Nhà cung cấp chính</label>
                     <select v-model="formData.defaultAiProvider" class="form-input">
-                      <option value="gemini">Google Gemini</option>
-                      <option value="openai">OpenAI</option>
                       <option value="claude">Anthropic Claude</option>
                     </select>
                   </div>
@@ -439,8 +437,8 @@ const formData = reactive({
   apiRateLimit: 60,
   apiTimeout: 30,
   maxFileSize: 50,
-  defaultAiProvider: 'gemini',
-  defaultAiModel: 'gemini-pro',
+  defaultAiProvider: 'claude',
+  defaultAiModel: 'claude-sonnet-5-5',
 
   // Security
   twoFactorAuth: false,

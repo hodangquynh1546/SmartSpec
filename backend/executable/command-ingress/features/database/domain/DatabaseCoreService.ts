@@ -156,7 +156,7 @@ export class DatabaseCoreService {
                 affects_requirement: true,
                 level: "info",
                 details: {
-                    message: `${username} generated database ${newDatabase.name} for version ${version.version_number}`
+                    message: `${username} đã sinh cơ sở dữ liệu ${newDatabase.name} cho phiên bản ${version.version_number}`
                 }
             });
 
@@ -268,7 +268,7 @@ export class DatabaseCoreService {
             details: {
                 before: beforeUpdate,
                 after: updatedDbLean,
-                message: `${username} updated database ${databaseId} on version ${version.version_number}`
+                message: `${username} đã cập nhật cơ sở dữ liệu ${databaseId} ở phiên bản ${version.version_number}`
             }
         });
 
@@ -358,7 +358,7 @@ export class DatabaseCoreService {
             level: "warning",
             details: {
                 before: beforeDelete,
-                message: `${username} deleted database ${databaseId} on version ${version.version_number}`
+                message: `${username} đã xoá cơ sở dữ liệu ${databaseId} ở phiên bản ${version.version_number}`
             }
         });
 

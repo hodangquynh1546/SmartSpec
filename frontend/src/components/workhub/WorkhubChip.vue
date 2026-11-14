@@ -2,7 +2,7 @@
 import { computed, onMounted } from 'vue'
 import { useToast } from 'vue-toastification'
 import { ref } from 'vue'
-import { workhub, loadProject, fetchUserStatus, syncNow, workhubErrorMessage, unlinkAccount, setProjectPaused } from '@/composables/useWorkhub'
+import { openWorkhub, workhub, loadProject, fetchUserStatus, syncNow, workhubErrorMessage, unlinkAccount, setProjectPaused } from '@/composables/useWorkhub'
 
 const props = defineProps({ projectId: { type: String, required: true } })
 const toast = useToast()
@@ -34,7 +34,7 @@ async function open() {
     try { await syncNow(props.projectId); toast.info('Đang tạo dự án trong WorkHub…') } catch (e) { toast.error(workhubErrorMessage(e)) }
     return
   }
-  window.open(p.value.workhub.url, '_blank', 'noopener')
+  try { await openWorkhub(p.value.workhub.url) } catch (e) { toast.error(workhubErrorMessage(e)) }
 }
 async function togglePause() {
   menuOpen.value = false

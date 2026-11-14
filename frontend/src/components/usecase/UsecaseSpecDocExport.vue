@@ -275,7 +275,7 @@ export default {
     <!DOCTYPE html>
     <html>
       <head>
-        <title>Use Case Specification</title>
+        <title>Đặc tả use case</title>
         <link rel="icon" href="../../public/slack-brands-solid-full.svg">
         <style>
           body { 
@@ -585,19 +585,19 @@ export default {
 
       // Project Information
       if (this.includeProjectInfo && this.projectInfo.name) {
-        content += `Project: ${this.projectInfo.name}\n`
-        if (this.projectInfo.version) content += `Version: ${this.projectInfo.version}\n`
+        content += `Dự án: ${this.projectInfo.name}\n`
+        if (this.projectInfo.version) content += `Phiên bản: ${this.projectInfo.version}\n`
         content += '\n'
       }
 
       // Timestamp
       if (this.includeTimestamp) {
-        content += `Generated: ${new Date().toLocaleString('vi-VN')}\n\n`
+        content += `Tạo lúc: ${new Date().toLocaleString('vi-VN')}\n\n`
       }
 
       // Table of Contents
       if (this.includeTableOfContents) {
-        content += 'TABLE OF CONTENTS\n'
+        content += 'MỤC LỤC\n'
         content += '================\n'
         this.useCasesToExport.forEach((uc, index) => {
           content += `${index + 1}. ${uc.name} (UC-${this.getUsecaseId(uc)})\n`
@@ -611,26 +611,26 @@ export default {
         content += `${'='.repeat(50)}\n`
         content += `ID: UC-${this.getUsecaseId(uc)}\n`
         const actorName = uc.actor?.name || uc.role?.name || 'Chưa chỉ định'
-        content += `Actor: ${actorName}\n`
-        content += `Priority: ${uc.priority || 'Chưa chỉ định'}\n\n`
+        content += `Tác nhân: ${actorName}\n`
+        content += `Độ ưu tiên: ${uc.priority || 'Chưa chỉ định'}\n\n`
 
-        content += `Goal: ${uc.goal || 'Chưa chỉ định'}\n\n`
-        content += `Description: ${(uc.description || uc.business_reason || uc.reason) || 'Chưa chỉ định'}\n\n`
+        content += `Mục tiêu: ${uc.goal || 'Chưa chỉ định'}\n\n`
+        content += `Mô tả: ${(uc.description || uc.business_reason || uc.reason) || 'Chưa chỉ định'}\n\n`
         
         // Business Reason (separate from description)
         if (uc.business_reason || uc.reason) {
-          content += `Business Reason: ${(uc.business_reason || uc.reason)}\n\n`
+          content += `Lý do nghiệp vụ: ${(uc.business_reason || uc.reason)}\n\n`
         }
         
         // Context - xử lý đúng format như UseCaseMainContent
         const contextStr = typeof uc.context === 'object' 
           ? (uc.context.module || uc.context.scope || uc.context.system || '') 
           : (uc.context || '')
-        content += `Context: ${contextStr || 'Chưa chỉ định'}\n\n`
+        content += `Ngữ cảnh: ${contextStr || 'Chưa chỉ định'}\n\n`
 
         // Actor Details - nếu actor là object
         if (uc.actor && typeof uc.actor === 'object') {
-          content += `Actor: ${uc.actor.name || 'Chưa chỉ định'}`
+          content += `Tác nhân: ${uc.actor.name || 'Chưa chỉ định'}`
           if (uc.actor.description) {
             content += ` - ${uc.actor.description}`
           }
@@ -638,7 +638,7 @@ export default {
         }
 
         // Main Flow - xử lý đúng format như UseCaseMainContent
-        content += 'Main Flow:\n'
+        content += 'Luồng chính:\n'
         const mainFlow = uc.main_flow || uc.tasks || []
         if (mainFlow.length > 0) {
           mainFlow.forEach((step, i) => {
@@ -651,10 +651,10 @@ export default {
                 content += ` → ${step.expected_result}`
               }
               if (step.inputs && step.inputs.length > 0) {
-                content += ` (Inputs: ${step.inputs.join(', ')})`
+                content += ` (Đầu vào: ${step.inputs.join(', ')})`
               }
               if (step.rules_applied && step.rules_applied.length > 0) {
-                content += ` [Rules: ${step.rules_applied.join(', ')}]`
+                content += ` [Quy tắc: ${step.rules_applied.join(', ')}]`
               }
               content += '\n'
             } else {
@@ -662,45 +662,45 @@ export default {
             }
           })
         } else {
-          content += '  No tasks defined\n'
+          content += '  Chưa có bước nào\n'
         }
         content += '\n'
 
         // Alternative Flows - thêm mới
         if (uc.alternative_flows && uc.alternative_flows.length > 0) {
-          content += 'Alternative Flows:\n'
+          content += 'Luồng thay thế:\n'
           uc.alternative_flows.forEach((af, i) => {
             const afId = af.id || `AF${i + 1}`
-            content += `  ${afId} (at Step ${af.at_step}):\n`
-            content += `    Condition: ${af.condition || 'N/A'}\n`
-            content += `    System Response: ${af.system_response || 'N/A'}\n`
-            content += `    End State: ${af.end_state || 'N/A'}\n\n`
+            content += `  ${afId} (tại bước ${af.at_step}):\n`
+            content += `    Điều kiện: ${af.condition || 'N/A'}\n`
+            content += `    Phản hồi hệ thống: ${af.system_response || 'N/A'}\n`
+            content += `    Trạng thái kết thúc: ${af.end_state || 'N/A'}\n\n`
           })
         }
 
         // Preconditions & Postconditions
-        content += 'Preconditions:\n'
+        content += 'Điều kiện tiên quyết:\n'
         if (uc.preconditions && uc.preconditions.length > 0) {
           uc.preconditions.forEach((precond, i) => {
             content += `  • ${precond}\n`
           })
         } else {
-          content += '  None\n'
+          content += '  Không có\n'
         }
         content += '\n'
 
-        content += 'Postconditions:\n'
+        content += 'Điều kiện sau:\n'
         if (uc.postconditions && uc.postconditions.length > 0) {
           uc.postconditions.forEach((postcond, i) => {
             content += `  • ${postcond}\n`
           })
         } else {
-          content += '  None\n'
+          content += '  Không có\n'
         }
         content += '\n'
 
         // Inputs & Outputs - xử lý đúng format như UseCaseMainContent
-        content += 'Inputs:\n'
+        content += 'Đầu vào:\n'
         if (uc.inputs && uc.inputs.length > 0) {
           uc.inputs.forEach((input) => {
             if (typeof input === 'object') {
@@ -713,11 +713,11 @@ export default {
             }
           })
         } else {
-          content += '  None\n'
+          content += '  Không có\n'
         }
         content += '\n'
 
-        content += 'Outputs:\n'
+        content += 'Đầu ra:\n'
         if (uc.outputs && uc.outputs.length > 0) {
           uc.outputs.forEach((output) => {
             if (typeof output === 'object') {
@@ -730,49 +730,49 @@ export default {
             }
           })
         } else {
-          content += '  None\n'
+          content += '  Không có\n'
         }
         content += '\n'
 
         // Trigger, Rules, Non-functional Constraints
-        content += 'Trigger:\n'
+        content += 'Kích hoạt:\n'
         if (uc.trigger && typeof uc.trigger === 'object') {
-          content += `  • Event: ${uc.trigger.event || 'N/A'}\n`
+          content += `  • Sự kiện: ${uc.trigger.event || 'N/A'}\n`
           if (uc.trigger.source) {
-            content += `  • Source: ${uc.trigger.source}\n`
+            content += `  • Nguồn: ${uc.trigger.source}\n`
           }
         } else if (uc.triggers && uc.triggers.length > 0) {
           uc.triggers.forEach((trigger) => {
             content += `  • ${trigger}\n`
           })
         } else {
-          content += '  None\n'
+          content += '  Không có\n'
         }
         content += '\n'
 
-        content += 'Business Rules:\n'
+        content += 'Quy tắc nghiệp vụ:\n'
         if (uc.rules && uc.rules.length > 0) {
           uc.rules.forEach((rule) => {
             content += `  • ${rule}\n`
           })
         } else {
-          content += '  None\n'
+          content += '  Không có\n'
         }
         content += '\n'
 
-        content += 'Non-functional Constraints:\n'
+        content += 'Ràng buộc phi chức năng:\n'
         const constraints = uc.non_functional_constraints || uc.constraints || []
         if (constraints.length > 0) {
           constraints.forEach((constraint) => {
             content += `  • ${constraint}\n`
           })
         } else {
-          content += '  None\n'
+          content += '  Không có\n'
         }
         content += '\n'
 
         // Exceptions - xử lý đúng format như UseCaseMainContent
-        content += 'Exceptions:\n'
+        content += 'Ngoại lệ:\n'
         if (uc.exceptions && uc.exceptions.length > 0) {
           uc.exceptions.forEach((exception) => {
             if (typeof exception === 'object') {
@@ -790,36 +790,36 @@ export default {
             }
           })
         } else {
-          content += '  No exceptions defined\n'
+          content += '  Chưa có ngoại lệ\n'
         }
         content += '\n'
 
         // Stakeholders & Related Use Cases
-        content += 'Stakeholders:\n'
+        content += 'Các bên liên quan:\n'
         if (uc.stakeholders && uc.stakeholders.length > 0) {
           uc.stakeholders.forEach((stakeholder) => {
             content += `  [${stakeholder}] `
           })
           content += '\n'
         } else {
-          content += '  None\n'
+          content += '  Không có\n'
         }
         content += '\n'
 
-        content += 'Related Use Cases:\n'
+        content += 'Use case liên quan:\n'
         if (uc.related_usecases && uc.related_usecases.length > 0) {
           uc.related_usecases.forEach((relatedId) => {
             content += `  UC-${relatedId} `
           })
           content += '\n'
         } else {
-          content += '  None\n'
+          content += '  Không có\n'
         }
         content += '\n'
 
         // Feedback
         if (uc.feedback) {
-          content += `Feedback: ${uc.feedback}\n\n`
+          content += `Phản hồi: ${uc.feedback}\n\n`
         }
 
         content += '\n' + '='.repeat(50) + '\n\n'
@@ -834,16 +834,16 @@ export default {
       // Header
       html += `
     <div class="header">
-      <h1>Use Case Specification Document</h1>
+      <h1>Tài liệu đặc tả use case</h1>
       ${
         this.includeProjectInfo && this.projectInfo.name
           ? `
         <div class="project-info">
-          <h3>Project Information</h3>
-          <p><strong>Project:</strong> ${this.projectInfo.name}</p>
+          <h3>Thông tin dự án</h3>
+          <p><strong>Dự án:</strong> ${this.projectInfo.name}</p>
           ${
             this.projectInfo.version
-              ? `<p><strong>Version:</strong> ${this.projectInfo.version}</p>`
+              ? `<p><strong>Phiên bản:</strong> ${this.projectInfo.version}</p>`
               : ''
           }
         </div>
@@ -854,7 +854,7 @@ export default {
         this.includeTimestamp
           ? `
         <div class="timestamp">
-          Generated on: ${new Date().toLocaleString('vi-VN')}
+          Tạo lúc on: ${new Date().toLocaleString('vi-VN')}
         </div>
       `
           : ''
@@ -864,7 +864,7 @@ export default {
 
       // Table of Contents
       if (this.includeTableOfContents && this.useCasesToExport.length > 0) {
-        html += '<div class="toc"><h2>Table of Contents</h2><ul>'
+        html += '<div class="toc"><h2>Mục lục</h2><ul>'
         this.useCasesToExport.forEach((uc, index) => {
           html += `<li>${index + 1}. ${uc.name} (UC-${this.getUsecaseId(uc)})</li>`
         })
@@ -877,36 +877,36 @@ export default {
       <div class="usecase-section page-break-avoid">
         <div class="usecase-header keep-with-next">
           <h2>${index + 1}. ${uc.name}</h2>
-          <p>UC-${this.getUsecaseId(uc)} | Actor: ${(uc.actor?.name || uc.role?.name) || 'Chưa chỉ định'}${uc.actor?.description ? ` - ${this.escapeHtml(uc.actor.description)}` : ''} | Priority: ${
+          <p>UC-${this.getUsecaseId(uc)} | Tác nhân: ${(uc.actor?.name || uc.role?.name) || 'Chưa chỉ định'}${uc.actor?.description ? ` - ${this.escapeHtml(uc.actor.description)}` : ''} | Độ ưu tiên: ${
           uc.priority || 'Chưa chỉ định'
         }</p>
         </div>
         
-        <!-- Goal, Description, Context -->
+        <!-- Goal, Description, Ngữ cảnh -->
         <div class="detail-grid three-columns page-break-avoid">
           <div class="detail-item">
-            <h4 class="keep-with-next">Goal</h4>
+            <h4 class="keep-with-next">Mục tiêu</h4>
             <p>${this.escapeHtml(uc.goal || 'Chưa chỉ định')}</p>
           </div>
           <div class="detail-item">
-            <h4 class="keep-with-next">Description</h4>
+            <h4 class="keep-with-next">Mô tả</h4>
             <p>${this.escapeHtml((uc.description || uc.business_reason || uc.reason) || 'Chưa chỉ định')}</p>
           </div>
           <div class="detail-item">
-            <h4 class="keep-with-next">Context</h4>
+            <h4 class="keep-with-next">Ngữ cảnh</h4>
             <p>${this.escapeHtml((typeof uc.context === 'object' ? (uc.context.module || uc.context.scope || uc.context.system || '') : uc.context) || 'Chưa chỉ định')}</p>
           </div>
           ${uc.business_reason || uc.reason ? `
           <div class="detail-item">
-            <h4 class="keep-with-next">Business Reason</h4>
+            <h4 class="keep-with-next">Lý do nghiệp vụ</h4>
             <p>${this.escapeHtml((uc.business_reason || uc.reason) || 'Chưa chỉ định')}</p>
           </div>
           ` : ''}
         </div>
         
-        <!-- Main Flow - Enhanced -->
+        <!-- Luồng chính - Enhanced -->
         <div class="detail-item full-width page-break-avoid">
-          <h4 class="keep-with-next">Main Flow</h4>
+          <h4 class="keep-with-next">Luồng chính</h4>
           <ol class="task-list">
             ${
               (() => {
@@ -917,15 +917,15 @@ export default {
                       const stepNum = step.step || (i + 1)
                       const actor = step.actor || 'User'
                       const action = step.action || step
-                      let html = `<li><strong>Step ${stepNum} [${actor}]:</strong> ${this.escapeHtml(action)}`
+                      let html = `<li><strong>Bước ${stepNum} [${actor}]:</strong> ${this.escapeHtml(action)}`
                       if (step.expected_result) {
                         html += ` <span style="color: #059669;">→ ${this.escapeHtml(step.expected_result)}</span>`
                       }
                       if (step.inputs && step.inputs.length > 0) {
-                        html += ` <span style="color: #7c3aed; font-size: 0.9em;">(Inputs: ${step.inputs.map(inp => this.escapeHtml(inp)).join(', ')})</span>`
+                        html += ` <span style="color: #7c3aed; font-size: 0.9em;">(Đầu vào: ${step.inputs.map(inp => this.escapeHtml(inp)).join(', ')})</span>`
                       }
                       if (step.rules_applied && step.rules_applied.length > 0) {
-                        html += ` <span style="color: #dc2626; font-size: 0.9em;">[Rules: ${step.rules_applied.map(rule => this.escapeHtml(rule)).join(', ')}]</span>`
+                        html += ` <span style="color: #dc2626; font-size: 0.9em;">[Quy tắc: ${step.rules_applied.map(rule => this.escapeHtml(rule)).join(', ')}]</span>`
                       }
                       html += '</li>'
                       return html
@@ -934,28 +934,28 @@ export default {
                     }
                   }).join('')
                 } else {
-                  return '<li>No tasks defined</li>'
+                  return '<li>Chưa có bước nào</li>'
                 }
               })()
             }
           </ol>
         </div>
         
-        <!-- Alternative Flows -->
+        <!-- Luồng thay thế -->
         ${uc.alternative_flows && uc.alternative_flows.length > 0 ? `
         <div class="detail-item full-width page-break-avoid">
-          <h4 class="keep-with-next">Alternative Flows</h4>
+          <h4 class="keep-with-next">Luồng thay thế</h4>
           <div style="margin-left: 20px;">
             ${uc.alternative_flows.map((af, i) => {
               const afId = af.id || `AF${i + 1}`
               return `
               <div style="margin-bottom: 12px; padding: 8px; background: #f9fafb; border-left: 3px solid #1a365d; border-radius: 4px;">
                 <div style="font-weight: bold; margin-bottom: 4px;">
-                  ${afId} <span style="color: #6b7280; font-weight: normal;">(at Step ${af.at_step})</span>
+                  ${afId} <span style="color: #6b7280; font-weight: normal;">(tại bước ${af.at_step})</span>
                 </div>
                 <div style="margin: 4px 0;"><strong>If:</strong> ${this.escapeHtml(af.condition || 'N/A')}</div>
-                <div style="margin: 4px 0;"><strong>Then:</strong> ${this.escapeHtml(af.system_response || 'N/A')}</div>
-                <div style="margin: 4px 0;"><strong>End State:</strong> ${this.escapeHtml(af.end_state || 'N/A')}</div>
+                <div style="margin: 4px 0;"><strong>Sau đó:</strong> ${this.escapeHtml(af.system_response || 'N/A')}</div>
+                <div style="margin: 4px 0;"><strong>Trạng thái kết thúc:</strong> ${this.escapeHtml(af.end_state || 'N/A')}</div>
               </div>
               `
             }).join('')}
@@ -963,38 +963,38 @@ export default {
         </div>
         ` : ''}
         
-        <!-- Preconditions & Postconditions -->
+        <!-- Điều kiện tiên quyết & Điều kiện sau -->
         <div class="detail-grid two-columns page-break-avoid">
           <div class="detail-item">
-            <h4 class="keep-with-next">Preconditions</h4>
+            <h4 class="keep-with-next">Điều kiện tiên quyết</h4>
             <ul class="condition-list">
               ${
                 uc.preconditions && uc.preconditions.length > 0
                   ? uc.preconditions
                       .map((precond) => `<li>${this.escapeHtml(precond)}</li>`)
                       .join('')
-                  : '<li>None</li>'
+                  : '<li>Không có</li>'
               }
             </ul>
           </div>
           <div class="detail-item">
-            <h4 class="keep-with-next">Postconditions</h4>
+            <h4 class="keep-with-next">Điều kiện sau</h4>
             <ul class="condition-list">
               ${
                 uc.postconditions && uc.postconditions.length > 0
                   ? uc.postconditions
                       .map((postcond) => `<li>${this.escapeHtml(postcond)}</li>`)
                       .join('')
-                  : '<li>None</li>'
+                  : '<li>Không có</li>'
               }
             </ul>
           </div>
         </div>
         
-        <!-- Inputs & Outputs - Enhanced -->
+        <!-- Đầu vào & Đầu ra - Enhanced -->
         <div class="detail-grid two-columns page-break-avoid">
           <div class="detail-item">
-            <h4 class="keep-with-next">Inputs</h4>
+            <h4 class="keep-with-next">Đầu vào</h4>
             <div>
               ${
                 uc.inputs && uc.inputs.length > 0
@@ -1013,7 +1013,7 @@ export default {
             </div>
           </div>
           <div class="detail-item">
-            <h4 class="keep-with-next">Outputs</h4>
+            <h4 class="keep-with-next">Đầu ra</h4>
             <div>
               ${
                 uc.outputs && uc.outputs.length > 0
@@ -1033,26 +1033,26 @@ export default {
           </div>
         </div>
         
-        <!-- Triggers & Business Rules -->
+        <!-- Sự kiện kích hoạt & Quy tắc nghiệp vụ -->
         <div class="detail-grid two-columns page-break-avoid">
           <div class="detail-item">
-            <h4 class="keep-with-next">Triggers</h4>
+            <h4 class="keep-with-next">Sự kiện kích hoạt</h4>
             <ul class="condition-list">
               ${
                 (() => {
                   if (uc.trigger && typeof uc.trigger === 'object') {
-                    return `<li><strong>Event:</strong> ${this.escapeHtml(uc.trigger.event || 'N/A')}</li>${uc.trigger.source ? `<li><strong>Source:</strong> ${this.escapeHtml(uc.trigger.source)}</li>` : ''}`
+                    return `<li><strong>Sự kiện:</strong> ${this.escapeHtml(uc.trigger.event || 'N/A')}</li>${uc.trigger.source ? `<li><strong>Nguồn:</strong> ${this.escapeHtml(uc.trigger.source)}</li>` : ''}`
                   } else if (uc.triggers && uc.triggers.length > 0) {
                     return uc.triggers.map((trigger) => `<li>${this.escapeHtml(trigger)}</li>`).join('')
                   } else {
-                    return '<li>None</li>'
+                    return '<li>Không có</li>'
                   }
                 })()
               }
             </ul>
           </div>
           <div class="detail-item">
-            <h4 class="keep-with-next">Business Rules</h4>
+            <h4 class="keep-with-next">Quy tắc nghiệp vụ</h4>
             <ul class="condition-list">
               ${
                 uc.rules && uc.rules.length > 0
@@ -1065,16 +1065,16 @@ export default {
                         return `<li>${this.escapeHtml(rule)}</li>`
                       }
                     }).join('')
-                  : '<li>None</li>'
+                  : '<li>Không có</li>'
               }
             </ul>
           </div>
         </div>
         
-        <!-- Constraints & Exceptions -->
+        <!-- Ràng buộc & Ngoại lệ -->
         <div class="detail-grid two-columns page-break-avoid">
           <div class="detail-item">
-            <h4 class="keep-with-next">Constraints</h4>
+            <h4 class="keep-with-next">Ràng buộc</h4>
             <ul class="condition-list">
               ${
                 (() => {
@@ -1082,14 +1082,14 @@ export default {
                   if (constraints.length > 0) {
                     return constraints.map((constraint) => `<li>${this.escapeHtml(constraint)}</li>`).join('')
                   } else {
-                    return '<li>None</li>'
+                    return '<li>Không có</li>'
                   }
                 })()
               }
             </ul>
           </div>
           <div class="detail-item">
-            <h4 class="keep-with-next">Exceptions</h4>
+            <h4 class="keep-with-next">Ngoại lệ</h4>
             <ul class="condition-list">
               ${
                 uc.exceptions && uc.exceptions.length > 0
@@ -1105,16 +1105,16 @@ export default {
                         return `<li>⚠ ${this.escapeHtml(exception)}</li>`
                       }
                     }).join('')
-                  : '<li>No exceptions defined</li>'
+                  : '<li>Chưa có ngoại lệ</li>'
               }
             </ul>
           </div>
         </div>
         
-        <!-- Stakeholders & Related Use Cases -->
+        <!-- Các bên liên quan & Use case liên quan -->
         <div class="detail-grid two-columns page-break-avoid">
           <div class="detail-item">
-            <h4 class="keep-with-next">Stakeholders</h4>
+            <h4 class="keep-with-next">Các bên liên quan</h4>
             <div>
               ${
                 uc.stakeholders && uc.stakeholders.length > 0
@@ -1133,7 +1133,7 @@ export default {
           uc.feedback
             ? `
           <div class="detail-item full-width page-break-avoid">
-            <h4 class="keep-with-next">Feedback</h4>
+            <h4 class="keep-with-next">Phản hồi</h4>
             <p>${this.escapeHtml(uc.feedback)}</p>
           </div>
         `

@@ -64,7 +64,7 @@ export class ImportService {
     await this.logs.createLog({
       project_id: v.project, user_id: userId, action: "generate_output", target_id: String(doc._id), target_type: target, version_number: v.number,
       affects_requirement: true, level: "info", performed_by_ai: true,
-      details: { message: `${user?.name ?? "User"} imported ${target} "${doc.name}" (written by an AI client)` },
+      details: { message: `${user?.name ?? "Người dùng"} đã nhập ${target} "${doc.name}" (do Claude/MCP ghi)` },
     } as any);
   }
 

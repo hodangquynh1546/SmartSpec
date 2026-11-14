@@ -161,7 +161,7 @@ export class SequenceDiagramServiceImpl implements SequenceDiagramService {
           performed_by_ai: true,
           details: {
             after: { name: savedDocument.name, usecase_ref_id: usecaseId },
-            message: `${username} generated sequence diagram "${savedDocument.name}" from usecase`
+            message: `${username} đã sinh sơ đồ tuần tự "${savedDocument.name}" từ use case`
           }
         });
       } catch (logError) {
@@ -315,7 +315,7 @@ export class SequenceDiagramServiceImpl implements SequenceDiagramService {
             level: "warning",
             details: {
               before: beforeSnapshot,
-              message: `${username} deleted sequence diagram "${sequenceDiagram.name}"`
+              message: `${username} đã xoá sơ đồ tuần tự "${sequenceDiagram.name}"`
             }
           });
         }

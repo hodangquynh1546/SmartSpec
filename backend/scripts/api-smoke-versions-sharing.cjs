@@ -133,7 +133,7 @@ const sh = (r) => `${r.s} ${typeof r.d === "string" ? r.d.slice(0, 90) : JSON.st
   }
   r = await call(A.tok, "GET", "/api/stats/system");
   t("stats: a normal user cannot read system stats", r.s === 403, sh(r));
-  r = await call(ad, "POST", "/api/keys", { key_value: "AIzaFAKE" + id, provider: "gemini", model_name: "gemini-1.5-flash", is_active: false });
+  r = await call(ad, "POST", "/api/keys", { key_value: "sk-ant-FAKE" + id, provider: "claude", model_name: "claude-sonnet-5-5", is_active: false });
   t("keys: create", r.s === 200 || r.s === 201, sh(r));
   r = await call(ad, "GET", "/api/keys");
   t("keys: list works for the admin", r.s === 200, sh(r));

@@ -33,6 +33,11 @@ export default function initWorkhubRoute(): Router {
     res.json({ success: true, data: await workhubSyncService.linkUser(req.getSubject(), { email, password, register: !!register, fullName }) });
   }));
 
+  // "Open WorkHub": a one-time URL that signs the browser into WorkHub as the same person, landing on `next`.
+  router.post("/sso", wrap(async (req, res) => {
+    res.json({ success: true, data: await bridgeClient.ssoUrl(req.getSubject(), String(req.body?.next ?? "/workspaces")) });
+  }));
+
   // Unlink my WorkHub account: the token is revoked in WorkHub; tasks/documents already created stay untouched.
   router.delete("/link", wrap(async (req, res) => {
     res.json({ success: true, data: await workhubSyncService.unlinkUser(req.getSubject()) });
@@ -99,6 +104,12 @@ export default function initWorkhubRoute(): Router {
 /** Server-to-server callback used by ForgeBridge (no user token; protected by the shared key). */
 export function initWorkhubCallbackRoute(): Router {
   const router = Router();
+  // WorkHub ↔ SmartSpec project meta: created in WorkHub / renamed / members (see WorkhubSyncService.upsertProject).
+  router.post("/project-upsert", async (req, res) => {
+    if (req.header("x-bridge-key") !== env.BRIDGE_SECRET) return void res.status(401).json({ success: false });
+    try { res.json(await workhubSyncService.upsertProject(req.body ?? {})); }
+    catch (e: any) { res.status(500).json({ success: false, message: e?.message ?? "error" }); }
+  });
   router.post("/progress", async (req, res) => {
     if (req.header("x-bridge-key") !== env.BRIDGE_SECRET) return void res.status(401).json({ success: false });
     const b = req.body ?? {};

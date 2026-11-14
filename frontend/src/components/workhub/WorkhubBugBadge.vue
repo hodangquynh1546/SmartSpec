@@ -2,7 +2,7 @@
 import { computed, ref } from 'vue'
 import { useToast } from 'vue-toastification'
 import axiosClient from '@/utils/axiosClient'
-import { workhub, workhubErrorMessage } from '@/composables/useWorkhub'
+import { workhub, workhubErrorMessage, openWorkhub } from '@/composables/useWorkhub'
 
 const props = defineProps({
   testcase: { type: Object, required: true },
@@ -32,7 +32,7 @@ const hint = computed(() => (bug.value?.status === 'DONE' && props.testcase.stat
 </script>
 
 <template>
-  <a v-if="bug && bug.issue_key" class="bug" :class="tone" :href="bug.url || undefined" target="_blank" rel="noopener" :title="hint" @click.stop>
+  <a v-if="bug && bug.issue_key" class="bug" :class="tone" :href="bug.url || undefined" target="_blank" rel="noopener" :title="hint" @click.prevent.stop="bug.url && openWorkhub(bug.url)">
     <span class="material-symbols-outlined">bug_report</span>
     <b>{{ bug.issue_key }}</b>
     <span>{{ bug.deleted ? 'Đã xoá' : NAMES[bug.status] || bug.status }}</span>

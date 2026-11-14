@@ -74,13 +74,19 @@ export class WorkhubSyncService {
     return projects.length;
   }
 
-  /** Newest completed version that actually has use cases (an empty auto-created version must not hide the real spec). */
+  /**
+   * The version whose spec is mirrored to WorkHub: the newest completed one that has use cases; else the newest settled
+   * (not being analysed) one that has use cases (e.g. a draft written by Claude/MCP); else the newest completed one;
+   * else the current version, so that even an empty project gets its WorkHub project at once.
+   */
   private async specVersion(projectId: string): Promise<any | null> {
-    const versions: any[] = await Version.find({ project_id: projectId, status: "completed" }).sort({ created_at: -1 }).limit(10).lean();
-    for (const v of versions) {
-      if (await Usecase.exists({ version_id: v._id })) return v;
-    }
-    return versions[0] ?? null;
+    const versions: any[] = await Version.find({ project_id: projectId }).sort({ created_at: -1 }).limit(15).lean();
+    const done = versions.filter((v) => v.status === "completed");
+    for (const v of done) if (await Usecase.exists({ version_id: v._id })) return v;
+    for (const v of versions) if (!["processing", "initializing"].includes(v.status) && await Usecase.exists({ version_id: v._id })) return v;
+    if (done[0]) return done[0];
+    const project: any = await Project.findById(projectId).select("current_version").lean();
+    return versions.find((v) => String(v._id) === String(project?.current_version)) ?? versions[0] ?? null;
   }
 
   /** Every design artifact of the version as a WorkHub document (SRS, diagrams, ERD + DDL, test plan). */
@@ -361,7 +367,11 @@ export class WorkhubSyncService {
   async autoLink(userId: string, email: string, password: string, name: string | undefined, createIfMissing: boolean) {
     if (!env.WORKHUB_ENABLED) return;
     const status = await bridgeClient.userStatus(userId).catch(() => null);
-    if (!status || status.linked) return; // Bridge down, or already linked
+    if (!status) return; // Bridge down
+    // Already linked to this very address: nothing to do. A link to ANOTHER address (the e-mail was changed/corrected
+    // after linking) is stale: it would watch the wrong WorkHub account and miss projects created in the right one.
+    if (status.linked && String(status.email ?? "").toLowerCase() === String(email).toLowerCase()) return;
+    if (status.linked) await bridgeClient.unlinkUser(userId).catch(() => undefined);
     try {
       await this.linkUser(userId, { email, password, register: false });
     } catch (e: any) {
@@ -371,6 +381,51 @@ export class WorkhubSyncService {
         logger.warn(`WorkHub auto-link for ${email} skipped: ${e?.message ?? e}`);
       }
     }
+  }
+
+  /**
+   * Inbound from WorkHub (through the Bridge): create the counterpart of a project somebody made in WorkHub, or merge
+   * name/description (three-way against the last agreed value: whoever changed since then wins, SmartSpec on a tie) and
+   * add WorkHub members that have a SmartSpec account. Returns the values SmartSpec ends up with.
+   */
+  async upsertProject(b: any) {
+    const norm = (x: unknown) => String(x ?? "").trim();
+    if (b.create) {
+      const owner: any = await User.findById(b.ownerSsUserId).select("_id").lean();
+      if (!owner) return { ssProjectId: null };
+      const p: any = await Project.create({
+        name: norm(b.name).slice(0, 200) || "Dự án WorkHub", description: norm(b.description) || norm(b.name), owner_id: owner._id, language: "vi-VN",
+        members: [{ user_id: owner._id, role: "owner", status: "accepted", invited_by: owner._id, invited_at: new Date(), responded_at: new Date(), history: [{ action: "accepted", by: owner._id, at: new Date() }] }],
+      });
+      const v: any = await Version.create({ project_id: p._id, version_number: 1, status: "completed", stage: "completed", created_by: owner._id });
+      p.current_version = v._id;
+      await p.save();
+      return { ssProjectId: String(p._id), name: p.name, description: p.description };
+    }
+    const p: any = await Project.findById(b.ssProjectId);
+    if (!p) return { changed: false };
+    let changed = false;
+    const wh = { name: norm(b.wh?.name), description: norm(b.wh?.description) };
+    const base = b.base ? { name: norm(b.base.name), description: norm(b.base.description) } : null;
+    const take = (field: "name" | "description") => {
+      const ss = norm(p[field]);
+      // WorkHub changed it since the last agreement and SmartSpec did not: take WorkHub's value
+      if (base && wh[field] !== base[field] && ss === base[field] && wh[field] && wh[field] !== ss) { p[field] = wh[field]; changed = true; }
+    };
+    take("name"); take("description");
+    // members that exist in both systems
+    const emails = (b.members ?? []).map((m: any) => String(m.email ?? "").toLowerCase()).filter(Boolean);
+    if (emails.length) {
+      const users: any[] = await User.find({ email: { $in: emails } }).select("email").lean();
+      for (const m of b.members ?? []) {
+        const u = users.find((x) => x.email === String(m.email).toLowerCase());
+        if (!u || String(p.owner_id) === String(u._id) || (p.members ?? []).some((x: any) => String(x.user_id) === String(u._id))) continue;
+        p.members.push({ user_id: u._id, role: m.role === "STAKEHOLDER" ? "viewer" : "editor", status: "accepted", invited_by: p.owner_id, invited_at: new Date(), responded_at: new Date(), history: [{ action: "accepted", by: p.owner_id, at: new Date() }] });
+        changed = true;
+      }
+    }
+    if (changed) await p.save();
+    return { changed, name: p.name, description: p.description ?? "" };
   }
 
   async unlinkUser(userId: string) {

@@ -36,6 +36,11 @@ export class BridgeClient {
     return this.call<{ email: string; fullName: string; registered: boolean }>("POST", `/v1/users/${ssUserId}/link`, input);
   }
 
+  /** URL that opens the WorkHub web app already signed in as this user, landing on `next` (a path inside WorkHub). */
+  ssoUrl(ssUserId: string, next: string) {
+    return this.call<{ url: string }>("POST", `/v1/users/${ssUserId}/sso`, { next });
+  }
+
   projectStatus(ssProjectId: string) {
     return this.call<any>("GET", `/v1/projects/${ssProjectId}`);
   }
